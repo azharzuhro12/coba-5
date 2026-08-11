@@ -35,8 +35,8 @@ CNN_INPUT_SHAPE = (N_MELS, MAX_FRAMES, 1)
 MODEL_DROPOUT = 0.30
 
 # Output sigmoid merupakan P(SALAH).
-# Threshold klasifikasi aplikasi saat ini tetap mengikuti nilai Anda: 0.45.
-CLASSIFICATION_THRESHOLD = 0.45
+# Keputusan aplikasi memakai P(BENAR) dengan batas minimum 40%.
+CLASSIFICATION_THRESHOLD = 0.40
 
 SLM_MODEL_NAME = "Qwen2.5-1.5B"
 SLM_MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
@@ -961,29 +961,32 @@ def predict_audio(
         )
     )
 
-    predicted_label = int(
-        probability_wrong
-        >= CLASSIFICATION_THRESHOLD
-    )
-
     probability_correct = float(
         1.0 - probability_wrong
     )
 
-    # CNN tetap memakai threshold klasifikasi yang sama.
-    # Namun hasil BENAR diterima jika P(BENAR) mencapai batas minimum aplikasi.
-    # Jika tidak, aplikasi memilih status TIDAK_DIKENALI
-    # agar suara meragukan tidak langsung disebut benar.
-    if predicted_label == 0:
-        if (
-            probability_correct
-            >= MIN_BENAR_PROBABILITY
-        ):
-            status = "BENAR"
-        else:
-            status = "TIDAK_DIKENALI"
-    else:
-        status = "SALAH"
+    # ========================================================
+    # ATURAN KEPUTUSAN APLIKASI
+    # ========================================================
+    # Gunakan SATU threshold saja, yaitu P(BENAR).
+    #
+    # P(BENAR) >= 0.40 -> BENAR
+    # P(BENAR) <  0.40 -> SALAH
+    #
+    # Karena output sigmoid CNN adalah P(SALAH),
+    # P(BENAR) = 1 - P(SALAH).
+    predicted_label = (
+        0
+        if probability_correct
+        >= MIN_BENAR_PROBABILITY
+        else 1
+    )
+
+    status = (
+        "BENAR"
+        if predicted_label == 0
+        else "SALAH"
+    )
 
     return {
         "predicted_label": predicted_label,
@@ -1011,12 +1014,6 @@ def render_result(
             "Hasil: SALAH"
         )
 
-    elif status == "TIDAK_DIKENALI":
-        st.warning(
-            "Bacaan tidak dapat dikenali dengan yakin. "
-            "Silakan ulangi bacaan ghunnah dengan suara yang jelas."
-        )
-
     probability_correct = float(
         prediction["probability_correct"]
     )
@@ -1038,9 +1035,6 @@ def render_result(
         "Probabilitas SALAH",
         f"{probability_wrong * 100:.2f}%",
     )
-
-    if status == "TIDAK_DIKENALI":
-        return
 
     base_feedback = choose_base_feedback(
         feedback_texts,
