@@ -36,7 +36,7 @@ MODEL_DROPOUT = 0.30
 
 # Output sigmoid merupakan P(SALAH).
 # Threshold klasifikasi aplikasi saat ini tetap mengikuti nilai Anda: 0.45.
-CLASSIFICATION_THRESHOLD = 0.45
+CLASSIFICATION_THRESHOLD = 0.40
 
 SLM_MODEL_NAME = "Qwen2.5-1.5B"
 SLM_MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
