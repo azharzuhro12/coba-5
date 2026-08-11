@@ -35,7 +35,7 @@ CNN_INPUT_SHAPE = (N_MELS, MAX_FRAMES, 1)
 MODEL_DROPOUT = 0.30
 
 # Notebook (13) menggunakan threshold tetap 0.50 dan output sigmoid P(SALAH).
-CLASSIFICATION_THRESHOLD = 0.50
+CLASSIFICATION_THRESHOLD = 0.45
 
 SLM_MODEL_NAME = "Qwen2.5-1.5B"
 SLM_MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
