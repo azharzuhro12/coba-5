@@ -36,7 +36,7 @@ MODEL_DROPOUT = 0.30
 
 # Output sigmoid merupakan P(SALAH).
 # Threshold klasifikasi aplikasi saat ini tetap mengikuti nilai Anda: 0.45.
-CLASSIFICATION_THRESHOLD = 0.40
+CLASSIFICATION_THRESHOLD = 0.45
 
 SLM_MODEL_NAME = "Qwen2.5-1.5B"
 SLM_MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
@@ -50,7 +50,7 @@ SILENCE_PEAK_THRESHOLD = 0.015
 # Syarat aktivitas suara absolut.
 # Bukan threshold relatif terhadap suara paling keras di rekaman.
 ACTIVE_FRAME_DBFS_THRESHOLD = -34.0
-MIN_ACTIVE_DURATION_SECONDS = 0.80
+MIN_ACTIVE_DURATION_SECONDS = 0.50
 MIN_ACTIVE_FRAME_RATIO = 0.025
 
 # Pengaman tambahan agar hasil yang meragukan tidak langsung disebut BENAR.
@@ -971,7 +971,7 @@ def predict_audio(
     )
 
     # CNN tetap memakai threshold klasifikasi yang sama.
-    # Namun hasil BENAR hanya diterima jika P(BENAR) cukup kuat.
+    # Namun hasil BENAR diterima jika P(BENAR) mencapai batas minimum aplikasi.
     # Jika tidak, aplikasi memilih status TIDAK_DIKENALI
     # agar suara meragukan tidak langsung disebut benar.
     if predicted_label == 0:
