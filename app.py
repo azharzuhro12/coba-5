@@ -55,7 +55,7 @@ MIN_ACTIVE_FRAME_RATIO = 0.025
 
 # Pengaman tambahan agar hasil yang meragukan tidak langsung disebut BENAR.
 # Ini adalah rejection rule di level aplikasi, bukan threshold training CNN.
-MIN_BENAR_PROBABILITY = 0.70
+MIN_BENAR_PROBABILITY = 0.40
 
 MODEL_CANDIDATES = [
     APP_DIR / "best_cnn.h5",
