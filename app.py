@@ -34,17 +34,28 @@ MAX_FRAMES = 1 + REFERENCE_SAMPLES // HOP_LENGTH
 CNN_INPUT_SHAPE = (N_MELS, MAX_FRAMES, 1)
 MODEL_DROPOUT = 0.30
 
-# Notebook (13) menggunakan threshold tetap 0.50 dan output sigmoid P(SALAH).
-CLASSIFICATION_THRESHOLD = 0.40
+# Output sigmoid merupakan P(SALAH).
+# Threshold klasifikasi aplikasi saat ini tetap mengikuti nilai Anda: 0.45.
+CLASSIFICATION_THRESHOLD = 0.45
 
 SLM_MODEL_NAME = "Qwen2.5-1.5B"
 SLM_MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
 SLM_MAX_NEW_TOKENS = 80
 SLM_TEMPERATURE = 0.4
 
-# Deteksi audio hening sebelum CNN.
-SILENCE_RMS_DBFS_THRESHOLD = -50.0
-SILENCE_PEAK_THRESHOLD = 1e-5
+# Deteksi audio hening/noise kecil sebelum CNN.
+SILENCE_RMS_DBFS_THRESHOLD = -38.0
+SILENCE_PEAK_THRESHOLD = 0.015
+
+# Syarat aktivitas suara absolut.
+# Bukan threshold relatif terhadap suara paling keras di rekaman.
+ACTIVE_FRAME_DBFS_THRESHOLD = -34.0
+MIN_ACTIVE_DURATION_SECONDS = 0.50
+MIN_ACTIVE_FRAME_RATIO = 0.025
+
+# Pengaman tambahan agar hasil yang meragukan tidak langsung disebut BENAR.
+# Ini adalah rejection rule di level aplikasi, bukan threshold training CNN.
+MIN_BENAR_PROBABILITY = 0.70
 
 MODEL_CANDIDATES = [
     APP_DIR / "best_cnn.h5",
@@ -394,6 +405,14 @@ def decode_audio(
 def validate_audible_audio(
     waveform: np.ndarray,
 ) -> None:
+    """
+    Menolak audio kosong, terlalu pelan, atau hanya memiliki noise/
+    bunyi singkat.
+
+    Pemeriksaan ini menggunakan level absolut dBFS, sehingga berbeda
+    dari librosa.effects.split/trim yang bersifat relatif terhadap
+    bagian terkeras dari rekaman.
+    """
     waveform = np.asarray(
         waveform,
         dtype=np.float32,
@@ -403,6 +422,14 @@ def validate_audible_audio(
         raise SilentAudioError(
             "Suara tidak terdengar."
         )
+
+    # Hilangkan NaN/Inf bila ada.
+    waveform = np.nan_to_num(
+        waveform,
+        nan=0.0,
+        posinf=0.0,
+        neginf=0.0,
+    )
 
     peak = float(
         np.max(
@@ -417,7 +444,8 @@ def validate_audible_audio(
             "Suara tidak terdengar."
         )
 
-    rms = float(
+    # RMS seluruh rekaman.
+    global_rms = float(
         np.sqrt(
             np.mean(
                 np.square(
@@ -428,19 +456,111 @@ def validate_audible_audio(
         )
     )
 
-    rms_dbfs = float(
+    global_rms_dbfs = float(
         20.0
         * np.log10(
             max(
-                rms,
+                global_rms,
                 1e-12,
             )
         )
     )
 
     if (
-        rms_dbfs
+        global_rms_dbfs
         < SILENCE_RMS_DBFS_THRESHOLD
+    ):
+        raise SilentAudioError(
+            "Suara tidak terdengar."
+        )
+
+    # --------------------------------------------------------
+    # FRAME-LEVEL ABSOLUTE ACTIVITY CHECK
+    # --------------------------------------------------------
+    frame_length = 2048
+    hop_length = 512
+
+    frame_rms = librosa.feature.rms(
+        y=waveform,
+        frame_length=frame_length,
+        hop_length=hop_length,
+        center=True,
+    )[0]
+
+    frame_dbfs = (
+        20.0
+        * np.log10(
+            np.maximum(
+                frame_rms,
+                1e-12,
+            )
+        )
+    )
+
+    active_mask = (
+        frame_dbfs
+        >= ACTIVE_FRAME_DBFS_THRESHOLD
+    )
+
+    active_frames = int(
+        np.sum(
+            active_mask
+        )
+    )
+
+    total_frames = max(
+        int(
+            frame_dbfs.size
+        ),
+        1,
+    )
+
+    active_duration = (
+        active_frames
+        * hop_length
+        / float(SAMPLE_RATE)
+    )
+
+    active_ratio = (
+        active_frames
+        / float(total_frames)
+    )
+
+    # Harus ada suara yang cukup lama.
+    if (
+        active_duration
+        < MIN_ACTIVE_DURATION_SECONDS
+    ):
+        raise SilentAudioError(
+            "Suara tidak terdengar."
+        )
+
+    # Untuk rekaman panjang, satu bunyi kecil sesaat tidak boleh
+    # dianggap sebagai bacaan valid.
+    if (
+        active_ratio
+        < MIN_ACTIVE_FRAME_RATIO
+    ):
+        raise SilentAudioError(
+            "Suara tidak terdengar."
+        )
+
+    # --------------------------------------------------------
+    # TRANSIENT / IMPULSE CHECK
+    # --------------------------------------------------------
+    # Bunyi klik/ketukan pendek bisa memiliki peak besar tetapi RMS
+    # sangat kecil. Peak-to-RMS yang ekstrem ditolak.
+    peak_to_rms = (
+        peak
+        / max(
+            global_rms,
+            1e-12,
+        )
+    )
+
+    if (
+        peak_to_rms > 35.0
+        and active_duration < 1.0
     ):
         raise SilentAudioError(
             "Suara tidak terdengar."
@@ -846,15 +966,24 @@ def predict_audio(
         >= CLASSIFICATION_THRESHOLD
     )
 
-    status = (
-        "SALAH"
-        if predicted_label == 1
-        else "BENAR"
-    )
-
     probability_correct = float(
         1.0 - probability_wrong
     )
+
+    # CNN tetap memakai threshold klasifikasi yang sama.
+    # Namun hasil BENAR hanya diterima jika P(BENAR) cukup kuat.
+    # Jika tidak, aplikasi memilih status TIDAK_DIKENALI
+    # agar suara meragukan tidak langsung disebut benar.
+    if predicted_label == 0:
+        if (
+            probability_correct
+            >= MIN_BENAR_PROBABILITY
+        ):
+            status = "BENAR"
+        else:
+            status = "TIDAK_DIKENALI"
+    else:
+        status = "SALAH"
 
     return {
         "predicted_label": predicted_label,
@@ -875,10 +1004,17 @@ def render_result(
     status = prediction["status"]
 
     # Label BENAR tetap tidak ditampilkan.
-    # Jika hasil SALAH, status SALAH tetap ditampilkan.
-    if predicted_label == 1:
+    # SALAH tetap ditampilkan.
+    # Audio meragukan ditolak agar tidak salah diberi label BENAR.
+    if status == "SALAH":
         st.error(
             "Hasil: SALAH"
+        )
+
+    elif status == "TIDAK_DIKENALI":
+        st.warning(
+            "Bacaan tidak dapat dikenali dengan yakin. "
+            "Silakan ulangi bacaan ghunnah dengan suara yang jelas."
         )
 
     probability_correct = float(
@@ -902,6 +1038,9 @@ def render_result(
         "Probabilitas SALAH",
         f"{probability_wrong * 100:.2f}%",
     )
+
+    if status == "TIDAK_DIKENALI":
+        return
 
     base_feedback = choose_base_feedback(
         feedback_texts,
