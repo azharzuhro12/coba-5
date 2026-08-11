@@ -852,9 +852,15 @@ def predict_audio(
         else "BENAR"
     )
 
+    probability_correct = float(
+        1.0 - probability_wrong
+    )
+
     return {
         "predicted_label": predicted_label,
         "status": status,
+        "probability_correct": probability_correct,
+        "probability_wrong": probability_wrong,
     }
 
 
@@ -868,13 +874,34 @@ def render_result(
 
     status = prediction["status"]
 
-    # Sesuai permintaan:
-    # label BENAR tidak ditampilkan.
-    # Probabilitas juga tidak ditampilkan.
+    # Label BENAR tetap tidak ditampilkan.
+    # Jika hasil SALAH, status SALAH tetap ditampilkan.
     if predicted_label == 1:
         st.error(
             "Hasil: SALAH"
         )
+
+    probability_correct = float(
+        prediction["probability_correct"]
+    )
+
+    probability_wrong = float(
+        prediction["probability_wrong"]
+    )
+
+    metric_benar, metric_salah = st.columns(
+        2
+    )
+
+    metric_benar.metric(
+        "Probabilitas BENAR",
+        f"{probability_correct * 100:.2f}%",
+    )
+
+    metric_salah.metric(
+        "Probabilitas SALAH",
+        f"{probability_wrong * 100:.2f}%",
+    )
 
     base_feedback = choose_base_feedback(
         feedback_texts,
