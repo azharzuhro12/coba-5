@@ -50,7 +50,7 @@ SILENCE_PEAK_THRESHOLD = 0.015
 # Syarat aktivitas suara absolut.
 # Bukan threshold relatif terhadap suara paling keras di rekaman.
 ACTIVE_FRAME_DBFS_THRESHOLD = -34.0
-MIN_ACTIVE_DURATION_SECONDS = 0.50
+MIN_ACTIVE_DURATION_SECONDS = 0.80
 MIN_ACTIVE_FRAME_RATIO = 0.025
 
 # Pengaman tambahan agar hasil yang meragukan tidak langsung disebut BENAR.
