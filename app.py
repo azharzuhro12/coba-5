@@ -70,7 +70,7 @@ METADATA_CANDIDATES = [
 
 
 st.set_page_config(
-    page_title="GhunnahSense",
+    page_title="Ghunnah",
     page_icon="🎙️",
     layout="centered",
 )
