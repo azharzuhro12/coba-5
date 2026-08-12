@@ -1006,36 +1006,8 @@ def render_result(
 
     status = prediction["status"]
 
-    # Label BENAR tetap tidak ditampilkan.
-    # SALAH tetap ditampilkan.
-    # Audio meragukan ditolak agar tidak salah diberi label BENAR.
-    if status == "SALAH":
-        st.error(
-            "Hasil: SALAH"
-        )
-
-    probability_correct = float(
-        prediction["probability_correct"]
-    )
-
-    probability_wrong = float(
-        prediction["probability_wrong"]
-    )
-
-    metric_benar, metric_salah = st.columns(
-        2
-    )
-
-    metric_benar.metric(
-        "Probabilitas BENAR",
-        f"{probability_correct * 100:.2f}%",
-    )
-
-    metric_salah.metric(
-        "Probabilitas SALAH",
-        f"{probability_wrong * 100:.2f}%",
-    )
-
+    # Label BENAR/SALAH dan probabilitas tidak ditampilkan.
+    # Hasil prediksi CNN langsung digunakan untuk memilih feedback.
     base_feedback = choose_base_feedback(
         feedback_texts,
         predicted_label,
