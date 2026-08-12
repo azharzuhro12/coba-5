@@ -35,8 +35,8 @@ CNN_INPUT_SHAPE = (N_MELS, MAX_FRAMES, 1)
 MODEL_DROPOUT = 0.30
 
 # Output sigmoid merupakan P(SALAH).
-# Keputusan aplikasi memakai P(BENAR) dengan batas minimum 40%.
-CLASSIFICATION_THRESHOLD = 0.40
+# Keputusan aplikasi memakai P(BENAR) dengan batas minimum 50%.
+CLASSIFICATION_THRESHOLD = 0.50
 
 SLM_MODEL_NAME = "Qwen2.5-1.5B"
 SLM_MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
@@ -55,7 +55,7 @@ MIN_ACTIVE_FRAME_RATIO = 0.025
 
 # Pengaman tambahan agar hasil yang meragukan tidak langsung disebut BENAR.
 # Ini adalah rejection rule di level aplikasi, bukan threshold training CNN.
-MIN_BENAR_PROBABILITY = 0.40
+MIN_BENAR_PROBABILITY = 0.50
 
 MODEL_CANDIDATES = [
     APP_DIR / "best_cnn.h5",
@@ -970,8 +970,8 @@ def predict_audio(
     # ========================================================
     # Gunakan SATU threshold saja, yaitu P(BENAR).
     #
-    # P(BENAR) >= 0.40 -> BENAR
-    # P(BENAR) <  0.40 -> SALAH
+    # P(BENAR) >= 0.50 -> BENAR
+    # P(BENAR) <  0.50 -> SALAH
     #
     # Karena output sigmoid CNN adalah P(SALAH),
     # P(BENAR) = 1 - P(SALAH).
