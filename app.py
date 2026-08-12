@@ -1123,33 +1123,6 @@ except Exception as error:
     st.stop()
 
 
-with st.sidebar:
-    st.subheader(
-        "Model"
-    )
-    st.write(
-        f"**CNN:** `{model_path.name}`"
-    )
-    st.write(
-        "**Input:** Log-Mel 64 × 501"
-    )
-    st.write(
-        "**Durasi:** maksimal 8 detik setelah trimming"
-    )
-    st.write(
-        f"**SLM:** `{SLM_MODEL_NAME}`"
-    )
-
-    if HF_TOKEN:
-        st.success(
-            "Qwen API aktif."
-        )
-    else:
-        st.info(
-            "HF_TOKEN belum diisi. Feedback dasar tetap dapat digunakan."
-        )
-
-
 upload_tab, record_tab = st.tabs(
     [
         "📁 Upload audio",
