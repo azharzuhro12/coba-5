@@ -1,0 +1,795 @@
+﻿filename,label,label_name,error_type,error_explanation
+ID1V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID1V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID1V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID1V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID2V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID2V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID2V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID2V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID3V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID3V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID3V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID3V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID4V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID4V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID4V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID4V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID5V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID5V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID5V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID5V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID6V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID6V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID6V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID6V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID7V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID7V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID7V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID7V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID8V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID8V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID8V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID8V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID9V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID9V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID9V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID9V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID10V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID10V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID10V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID10V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID11V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID11V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID11V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID11V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID12V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID12V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID12V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID12V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID13V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID13V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID13V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID13V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID14V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID14V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID14V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID14V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID15V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID15V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID15V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID15V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID16V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID16V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID16V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID16V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID17V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID17V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID17V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID17V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID18V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID18V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID18V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID18V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID19V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID19V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID19V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID19V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID20V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID20V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID20V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID20V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID21V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID21V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID21V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID21V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID22V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID22V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID22V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID22V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID23V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID23V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID23V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID23V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID24V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID24V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID24V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID24V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID25V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID25V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID25V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID25V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID26V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID26V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID26V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID26V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID27V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID27V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID27V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID27V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID28V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID28V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID28V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID28V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID29V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID29V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID29V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID29V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID30V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID30V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID30V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID30V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID31V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID31V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID31V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID31V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID32V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID32V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID32V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID32V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID33V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID33V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID33V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID33V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID34V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID34V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID34V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID34V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID35V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID35V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID35V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID35V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID36V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID36V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID36V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID36V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID37V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID37V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID37V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID37V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID38V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID38V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID38V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID38V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID39V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID39V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID39V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID39V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID40V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID40V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID40V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID40V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID41V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID41V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID41V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID41V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID42V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID42V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID42V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID42V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID43V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID43V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID43V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID43V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID44V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID44V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID44V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID44V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID45V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID45V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID45V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID45V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID46V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID46V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID46V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID46V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID47V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID47V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID47V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID47V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID48V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID48V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID48V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID48V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID49V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID49V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID49V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID49V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID50V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID50V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID50V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID50V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID51V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID51V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID51V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID51V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID52V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID52V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID52V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID52V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID53V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID53V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID53V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID53V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID54V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID54V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID54V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID54V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID55V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID55V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID55V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID56V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID56V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID56V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID56V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID57V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID57V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID57V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID57V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID58V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID58V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID58V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID58V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID59V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID59V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID59V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID59V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID60V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID60V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID60V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID60V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID61V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID61V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID61V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID61V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID62V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID62V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID62V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID62V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID63V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID63V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID63V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID63V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID64V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID64V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID64V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID64V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID65V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID65V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID65V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID65V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID66V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID66V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID66V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID66V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID67V4.wav,1,error,ghunnah,Dengung nya kurang jelas dan mad ngga konsisten.
+ID67V5.wav,1,error,ghunnah,Dengung nya kurang jelas dan mad ngga konsisten.
+ID67V7.wav,1,error,ghunnah,Dengung nya kurang jelas dan mad ngga konsisten.
+ID67V8.wav,1,error,ghunnah,Dengung nya kurang jelas dan mad ngga konsisten.
+ID68V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID68V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID68V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID68V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID69V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID69V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID69V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID69V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID70V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID70V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID70V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID70V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID71V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID71V5.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID71V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID71V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID72V4.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID72V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID72V7.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID72V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID73V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID73V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID74V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID74V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID74V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID74V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID75V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID75V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID75V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID75V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID76V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID76V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID76V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID76V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID77V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID77V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID77V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID77V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID78V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID78V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID78V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID78V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID79V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID79V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID79V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID79V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID80V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID80V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID80V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID80V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID81V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID81V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID81V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID81V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID82V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID82V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID82V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID82V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID83V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID83V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID83V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID83V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID84V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID84V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID84V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID84V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID85V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID85V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID85V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID85V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID86V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID86V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID86V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID86V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID87V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID87V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID87V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID87V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID88V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID88V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID88V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID88V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID89V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID89V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID89V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID89V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID90V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID90V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID90V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID90V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID91V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID91V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID91V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID91V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID92V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID92V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID92V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID92V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID93V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID93V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID93V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID93V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID94V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID94V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID94V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID94V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID95V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID95V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID95V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID95V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID96V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID96V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID96V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID96V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID97V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID97V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID97V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID97V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID98V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID98V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID98V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID98V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID99V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID99V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID99V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID99V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah.
+ID100V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID100V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID100V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID101V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID101V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID101V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID101V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID102V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID102V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID102V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID102V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID103V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID103V5.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID103V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID103V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID104V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID104V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID104V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID104V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID105V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID105V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID105V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID105V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID106V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID106V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID106V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID106V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID107V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID107V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID107V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID107V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID108V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID108V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID108V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID108V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID109V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID109V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID109V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID109V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID110V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID110V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID110V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID110V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID111V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID111V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID111V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID111V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID112V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID112V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID112V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID112V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID113V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID113V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID113V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID113V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID114V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID114V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID114V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID114V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID115V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID115V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID115V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID115V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID116V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID116V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID116V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID116V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID117V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID117V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID117V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID117V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik.
+ID118V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID118V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID118V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID118V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID119V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID119V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID119V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID119V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID120V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID120V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID120V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID120V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID121V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID121V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID121V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID121V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID122V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID122V5.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID122V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID122V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat.
+ID123V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID123V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID123V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID123V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID135V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID135V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID135V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID136V4.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID136V5.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID136V7.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID136V8.wav,0,correct,null,Dengungan ghunnah sudah tepat.
+ID137V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID137V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID137V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID137V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID138V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID138V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID138V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID138V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID124V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID124V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID124V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID124V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik.
+ID125V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID125V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID125V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID125V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID126V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID126V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID126V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID126V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID127V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID127V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID127V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID127V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID128V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID128V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID128V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID128V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID129V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID129V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID129V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID129V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID130V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID130V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID130V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID130V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID131V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID131V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID131V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID131V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah.
+ID132V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID132V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID132V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID132V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID133V4.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID133V5.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID133V7.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID133V8.wav,0,correct,null,Ghunnah sudah terdengar jelas.
+ID134V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID134V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID134V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID134V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna.
+ID135V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah.
+ID139V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID139V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID139V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID139V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID140V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID140V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID140V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID140V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID141V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID141V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID141V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID141V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID142V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID142V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID142V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID142V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID143V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID143V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID143V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID143V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID144V4.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID144V5.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID144V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID144V8.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID145V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID145V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID145V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID145V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID146V4.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID146V5.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID146V7.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID146V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID147V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID147V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID147V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID147V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID148V4.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID148V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID148V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID148V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID149V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID149V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID149V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID149V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID150V4.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID150V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID150V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID150V8.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID151V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID151V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID151V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID151V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID152V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID152V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID152V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID152V8.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID153V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID153V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID153V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID153V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID154V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID154V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID154V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID154V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID155V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID155V5.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID155V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID155V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID156V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID156V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID156V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID156V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID157V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID157V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID157V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID157V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID158V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID158V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID158V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID158V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID159V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID159V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID159V7.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID159V8.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID160V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID160V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID160V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID160V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID161V4.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID161V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID161V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID161V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID162V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID162V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID162V7.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID162V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID163V4.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID163V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID163V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID163V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID164V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID164V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID164V7.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID164V8.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID165V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID165V5.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID165V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID165V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID166V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID166V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID166V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID166V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID167V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID167V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID167V7.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID167V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID168V4.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID168V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID168V7.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID168V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID169V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID169V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID169V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID169V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID170V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID170V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID170V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID170V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID171V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID171V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID171V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID171V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID172V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID172V5.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID172V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID172V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID173V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID173V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID174V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID174V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID174V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID174V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID175V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID175V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID175V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID175V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID176V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID176V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID176V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID176V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID177V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID177V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID177V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID177V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID178V4.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID178V5.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID178V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID178V8.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID179V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID179V7.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID179V8.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID180V4.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID180V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID180V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID180V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID181V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID181V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID181V7.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID181V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID182V4.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID182V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID182V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID182V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID183V4.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID183V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID183V7.wav,0,correct,null,Bacaan ghunnah sudah sempurna
+ID183V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID184V4.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID184V5.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID184V7.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID184V8.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID185V4.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID185V5.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID185V7.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID185V8.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID186V4.wav,0,correct,null,Ghunnah sudah terdengar jelas
+ID186V5.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID187V4.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID187V5.wav,0,correct,null,Pengucapan ghunnah sudah sangat baik
+ID187V7.wav,0,correct,null,Pengucapan ghunnah sudah sesuai dengan kaidah
+ID187V8.wav,0,correct,null,Dengungan ghunnah sudah tepat
+ID188V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID188V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID188V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID188V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID189V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID189V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID189V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID190V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID190V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID190V7.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID190V8.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID191V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID191V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID191V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID191V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID192V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID192V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID192V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID192V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID193V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID193V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID193V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID193V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID194V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID194V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID194V7.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID194V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID195V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID195V5.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID195V7.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID195V8.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID196V4.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID196V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID196V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID196V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID197V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID197V5.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID197V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID197V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID198V4.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID198V5.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID198V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID198V8.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID199V4.wav,1,error,ghunnah,Dengungan ghunnah masih belum sempurna
+ID199V5.wav,1,error,ghunnah,Perhatikan dengungan ghunnah agar lebih tepat
+ID199V7.wav,1,error,ghunnah,Perlu latihan agar bacaan ghunnah lebih baik
+ID199V8.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID200V4.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID200V5.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID200V7.wav,1,error,ghunnah,Ada kesalahan dalam pengucapan ghunnah
+ID200V8.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID201V4.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID201V5.wav,1,error,ghunnah,Diperbaiki agar ghunnah sesuai dengan kaidah
+ID202V4.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
+ID202V5.wav,0,correct,null,Bacaan ghunnah sudah sempurna.
