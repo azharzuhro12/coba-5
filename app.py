@@ -1082,7 +1082,7 @@ def run_analysis(
 st.markdown(
     """
     <div class="hero">
-        <h1>🎙️ GhunnahSense</h1>
+        <h1>🎙️ Ghunnah</h1>
         <p>
             Analisis bacaan ghunnah menggunakan CNN dan pemberian
             umpan balik menggunakan Qwen2.5-1.5B.
