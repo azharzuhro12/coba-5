@@ -85,6 +85,30 @@ WEBRTC_FRAME_MS = 30
 MIN_VAD_SPEECH_RATIO = 0.12
 MIN_VAD_SPEECH_SECONDS = 0.30
 
+
+# Gate tambahan untuk membedakan ucapan nyata dari hiss/noise mikrofon.
+MIN_VAD_SPEECH_P75_DBFS = -43.0
+MIN_AUDIO_DYNAMIC_RANGE_DB = 4.5
+
+# Top-label YAMNet yang dianggap bukan ucapan jika indikasi
+# speech/recitation rendah.
+NO_VOICE_TOP_KEYWORDS = (
+    "silence",
+    "white noise",
+    "pink noise",
+    "static",
+    "background noise",
+    "environmental noise",
+    "mechanical fan",
+    "air conditioning",
+    "wind noise",
+    "rustle",
+    "click",
+    "typing",
+    "keyboard",
+    "camera",
+)
+
 # Kategori manusia dibuat lebih presisi.
 # Jangan memakai kata "vocal" karena bisa mencocokkan "animal vocalization".
 SPEECH_KEYWORDS = (
@@ -490,27 +514,34 @@ def get_webrtc_vad_metrics(
     waveform: np.ndarray,
 ) -> dict:
     """
-    Hitung proporsi frame yang dianggap speech oleh WebRTC VAD.
+    WebRTC VAD + pengukuran energi frame.
 
-    Input:
-    - mono
-    - 16 kHz
-    - float32 [-1, 1]
+    Selain rasio speech, fungsi ini mengukur:
+    - energi frame yang dianggap speech;
+    - noise floor;
+    - dynamic range.
 
-    WebRTC VAD membutuhkan PCM 16-bit dengan frame 10/20/30 ms.
+    Noise kamera/mikrofon kadang salah dianggap speech oleh VAD,
+    tetapi biasanya energinya rendah dan relatif konstan.
     """
     waveform = np.asarray(
         waveform,
         dtype=np.float32,
     )
 
+    empty_result = {
+        "vad_speech_ratio": 0.0,
+        "vad_speech_seconds": 0.0,
+        "vad_total_frames": 0,
+        "vad_speech_frames": 0,
+        "vad_speech_p75_dbfs": -120.0,
+        "audio_p20_dbfs": -120.0,
+        "audio_p90_dbfs": -120.0,
+        "audio_dynamic_range_db": 0.0,
+    }
+
     if waveform.size == 0:
-        return {
-            "vad_speech_ratio": 0.0,
-            "vad_speech_seconds": 0.0,
-            "vad_total_frames": 0,
-            "vad_speech_frames": 0,
-        }
+        return empty_result
 
     waveform = np.nan_to_num(
         waveform,
@@ -544,39 +575,68 @@ def get_webrtc_vad_metrics(
     )
 
     if total_frames <= 0:
-        return {
-            "vad_speech_ratio": 0.0,
-            "vad_speech_seconds": 0.0,
-            "vad_total_frames": 0,
-            "vad_speech_frames": 0,
-        }
+        return empty_result
 
     vad = webrtcvad.Vad(
         WEBRTC_VAD_MODE
     )
 
     speech_frames = 0
+    all_frame_dbfs = []
+    speech_frame_dbfs = []
 
     for frame_index in range(
         total_frames
     ):
-        start = (
+        start_index = (
             frame_index
             * frame_samples
         )
 
-        end = (
-            start
+        end_index = (
+            start_index
             + frame_samples
         )
 
-        frame = pcm16[
-            start:end
-        ].tobytes()
+        frame_pcm = pcm16[
+            start_index:end_index
+        ]
+
+        frame_float = (
+            frame_pcm.astype(
+                np.float32
+            )
+            / 32768.0
+        )
+
+        frame_rms = float(
+            np.sqrt(
+                np.mean(
+                    np.square(
+                        frame_float
+                    )
+                )
+                + 1e-12
+            )
+        )
+
+        frame_dbfs = float(
+            20.0
+            * np.log10(
+                max(
+                    frame_rms,
+                    1e-12,
+                )
+            )
+        )
+
+        all_frame_dbfs.append(
+            frame_dbfs
+        )
 
         try:
             is_speech = vad.is_speech(
-                frame,
+                frame_pcm.tobytes(),
                 SAMPLE_RATE,
             )
         except Exception:
@@ -584,6 +644,9 @@ def get_webrtc_vad_metrics(
 
         if is_speech:
             speech_frames += 1
+            speech_frame_dbfs.append(
+                frame_dbfs
+            )
 
     speech_ratio = (
         speech_frames
@@ -598,6 +661,43 @@ def get_webrtc_vad_metrics(
         / 1000.0
     )
 
+    all_frame_dbfs = np.asarray(
+        all_frame_dbfs,
+        dtype=np.float32,
+    )
+
+    audio_p20_dbfs = float(
+        np.percentile(
+            all_frame_dbfs,
+            20,
+        )
+    )
+
+    audio_p90_dbfs = float(
+        np.percentile(
+            all_frame_dbfs,
+            90,
+        )
+    )
+
+    audio_dynamic_range_db = float(
+        audio_p90_dbfs
+        - audio_p20_dbfs
+    )
+
+    if speech_frame_dbfs:
+        vad_speech_p75_dbfs = float(
+            np.percentile(
+                np.asarray(
+                    speech_frame_dbfs,
+                    dtype=np.float32,
+                ),
+                75,
+            )
+        )
+    else:
+        vad_speech_p75_dbfs = -120.0
+
     return {
         "vad_speech_ratio": float(
             speech_ratio
@@ -610,6 +710,18 @@ def get_webrtc_vad_metrics(
         ),
         "vad_speech_frames": int(
             speech_frames
+        ),
+        "vad_speech_p75_dbfs": float(
+            vad_speech_p75_dbfs
+        ),
+        "audio_p20_dbfs": float(
+            audio_p20_dbfs
+        ),
+        "audio_p90_dbfs": float(
+            audio_p90_dbfs
+        ),
+        "audio_dynamic_range_db": float(
+            audio_dynamic_range_db
         ),
     }
 
@@ -813,6 +925,61 @@ def validate_ghunnah_audio_type(
         keyword in lowered_top
         for keyword in MUSIC_KEYWORDS
     )
+
+    top_is_no_voice = any(
+        keyword in lowered_top
+        for keyword in NO_VOICE_TOP_KEYWORDS
+    )
+
+    vad_speech_p75_dbfs = float(
+        vad_metrics[
+            "vad_speech_p75_dbfs"
+        ]
+    )
+
+    audio_dynamic_range_db = float(
+        vad_metrics[
+            "audio_dynamic_range_db"
+        ]
+    )
+
+    # --------------------------------------------------------
+    # 0. NO-VOICE / NOISE KAMERA / MIC HISS
+    # --------------------------------------------------------
+    # VAD bisa false-positive pada hiss, fan, klik, atau noise perangkat.
+    # Karena itu frame VAD harus cukup keras DAN sinyal harus memiliki
+    # dinamika yang masuk akal untuk ucapan.
+    weak_voice_energy = (
+        vad_speech_p75_dbfs
+        < MIN_VAD_SPEECH_P75_DBFS
+    )
+
+    almost_constant_noise = (
+        audio_dynamic_range_db
+        < MIN_AUDIO_DYNAMIC_RANGE_DB
+    )
+
+    weak_yamnet_human = (
+        trusted_human_score
+        < 0.06
+    )
+
+    if (
+        (weak_voice_energy and weak_yamnet_human)
+        or (
+            almost_constant_noise
+            and weak_yamnet_human
+        )
+        or (
+            top_is_no_voice
+            and trusted_human_score < 0.10
+        )
+    ):
+        details["passed"] = False
+
+        raise SilentAudioError(
+            "Suara manusia tidak terdengar dengan cukup jelas."
+        )
 
     # --------------------------------------------------------
     # A. HEWAN: TOLAK TEGAS
@@ -1697,10 +1864,10 @@ def run_analysis(
 
     except SilentAudioError:
         st.warning(
-            "Suara terlalu pelan atau tidak cukup jelas untuk dianalisis."
+            "Suara tidak terdengar."
         )
         st.caption(
-            "Coba dekatkan mikrofon dan baca ghunnah dengan volume normal."
+            "Pastikan ada suara bacaan manusia yang jelas sebelum dianalisis."
         )
         return
 
@@ -1799,15 +1966,28 @@ with upload_tab:
     )
 
     st.caption(
-        "Uploader menerima berbagai format file. "
-        "File yang bukan audio akan ditolak saat proses decoding."
+        "Format audio: WAV, MP3, M4A, AAC, FLAC, OGG, OPUS, dan WEBM. "
+        "Rekaman video/kamera tidak digunakan sebagai input bacaan."
     )
 
     uploaded_audio = st.file_uploader(
         "Pilih file audio",
-        type=None,
+        type=[
+            "wav",
+            "mp3",
+            "m4a",
+            "aac",
+            "flac",
+            "ogg",
+            "opus",
+            "webm",
+        ],
         accept_multiple_files=False,
         key="uploaded_audio",
+        help=(
+            "Gunakan file audio. Video dari kamera tidak diproses "
+            "sebagai input bacaan."
+        ),
     )
 
     if uploaded_audio is not None:
