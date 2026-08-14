@@ -74,13 +74,6 @@ st.markdown(
             opacity: 0.95;
         }
 
-        .result-card {
-            padding: 1rem 1.1rem;
-            border-radius: 16px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            margin: 0.5rem 0 1rem 0;
-        }
 
         .feedback-card {
             padding: 1rem 1.1rem;
@@ -91,10 +84,6 @@ st.markdown(
             line-height: 1.6;
         }
 
-        .debug-text {
-            color: #64748b;
-            font-size: 0.86rem;
-        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -432,7 +421,7 @@ def predict(
     model: tf.keras.Model,
     audio_bytes: bytes,
     filename: str,
-) -> tuple[int, str, float, float]:
+) -> tuple[int, str]:
     x = preprocess_audio(
         audio_bytes,
         filename,
@@ -455,50 +444,9 @@ def predict(
     label = 0 if probability_correct >= MIN_BENAR else 1
     status = "BENAR" if label == 0 else "SALAH"
 
-    return (
-        label,
-        status,
-        probability_correct,
-        probability_wrong,
-    )
-
-
-def show_prediction(
-    status: str,
-    probability_correct: float,
-    probability_wrong: float,
-) -> None:
-    st.subheader("Hasil Prediksi")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.metric("Prediksi", status)
-
-    with col2:
-        st.metric(
-            "Probability BENAR",
-            f"{probability_correct * 100:.2f}%",
-        )
-
-    with col3:
-        st.metric(
-            "Probability SALAH",
-            f"{probability_wrong * 100:.2f}%",
-        )
-
-    st.progress(probability_correct)
-
-    st.markdown(
-        (
-            '<div class="debug-text">'
-            f"Raw output model (SALAH): {probability_wrong:.6f} | "
-            f"Probability BENAR: {probability_correct:.6f} | "
-            f"Threshold BENAR: {MIN_BENAR:.2f}"
-            "</div>"
-        ),
-        unsafe_allow_html=True,
-    )
+    # Probability tetap digunakan secara internal untuk menentukan kelas,
+    # tetapi tidak ditampilkan kepada pengguna.
+    return label, status
 
 
 def run_analysis(
@@ -508,21 +456,10 @@ def run_analysis(
     filename: str,
 ) -> None:
     try:
-        (
-            label,
-            status,
-            probability_correct,
-            probability_wrong,
-        ) = predict(
+        label, status = predict(
             model,
             audio_bytes,
             filename,
-        )
-
-        show_prediction(
-            status,
-            probability_correct,
-            probability_wrong,
         )
 
         options = feedbacks.get(label) or [
