@@ -45,14 +45,14 @@ SLM_MAX_NEW_TOKENS = 80
 SLM_TEMPERATURE = 0.4
 
 # Deteksi audio hening/noise kecil sebelum CNN.
-SILENCE_RMS_DBFS_THRESHOLD = -38.0
-SILENCE_PEAK_THRESHOLD = 0.015
+SILENCE_RMS_DBFS_THRESHOLD = -48.0
+SILENCE_PEAK_THRESHOLD = 0.005
 
 # Syarat aktivitas suara absolut.
 # Bukan threshold relatif terhadap suara paling keras di rekaman.
-ACTIVE_FRAME_DBFS_THRESHOLD = -34.0
-MIN_ACTIVE_DURATION_SECONDS = 0.50
-MIN_ACTIVE_FRAME_RATIO = 0.025
+ACTIVE_FRAME_DBFS_THRESHOLD = -44.0
+MIN_ACTIVE_DURATION_SECONDS = 0.25
+MIN_ACTIVE_FRAME_RATIO = 0.010
 
 # Pengaman tambahan agar hasil yang meragukan tidak langsung disebut BENAR.
 # Ini adalah rejection rule di level aplikasi, bukan threshold training CNN.
@@ -70,10 +70,10 @@ YAMNET_HANDLE = "https://tfhub.dev/google/yamnet/1"
 YAMNET_CHECK_SECONDS = 10.0
 
 # Ambang dibuat konservatif supaya tilawah/chant tidak mudah ditolak.
-MIN_HUMAN_VOICE_SCORE = 0.06
-ANIMAL_REJECT_SCORE = 0.22
-MUSIC_REJECT_SCORE = 0.35
-NONVOICE_MARGIN = 0.10
+MIN_HUMAN_VOICE_SCORE = 0.035
+ANIMAL_REJECT_SCORE = 0.28
+MUSIC_REJECT_SCORE = 0.45
+NONVOICE_MARGIN = 0.15
 
 HUMAN_VOICE_KEYWORDS = (
     "speech",
@@ -531,15 +531,23 @@ def validate_ghunnah_audio_type(
             "music_score": 0.0,
         }
 
-    # Rata-rata skor semua frame agar lebih stabil.
-    clip_scores = np.mean(
+    # Untuk top label / non-voice gunakan rata-rata agar stabil.
+    mean_scores = np.mean(
         scores,
+        axis=0,
+    )
+
+    # Untuk mendeteksi keberadaan suara manusia, gunakan persentil tinggi.
+    # Ini penting untuk bacaan yang hanya beberapa detik atau memiliki jeda.
+    voice_sensitive_scores = np.percentile(
+        scores,
+        90,
         axis=0,
     )
 
     top_index = int(
         np.argmax(
-            clip_scores
+            mean_scores
         )
     )
 
@@ -550,7 +558,7 @@ def validate_ghunnah_audio_type(
     )
 
     top_score = float(
-        clip_scores[
+        mean_scores[
             top_index
         ]
     )
@@ -558,7 +566,7 @@ def validate_ghunnah_audio_type(
     human_voice_score = (
         keyword_class_score(
             class_names,
-            clip_scores,
+            voice_sensitive_scores,
             HUMAN_VOICE_KEYWORDS,
         )
     )
@@ -566,7 +574,7 @@ def validate_ghunnah_audio_type(
     animal_score = (
         keyword_class_score(
             class_names,
-            clip_scores,
+            mean_scores,
             ANIMAL_KEYWORDS,
         )
     )
@@ -574,7 +582,7 @@ def validate_ghunnah_audio_type(
     music_score = (
         keyword_class_score(
             class_names,
-            clip_scores,
+            mean_scores,
             MUSIC_KEYWORDS,
         )
     )
@@ -587,6 +595,15 @@ def validate_ghunnah_audio_type(
         "animal_score": animal_score,
         "music_score": music_score,
     }
+
+    # --------------------------------------------------------
+    # PRIORITAS: SUARA MANUSIA / TILAWAH
+    # --------------------------------------------------------
+    # Quran/tilawah kadang oleh YAMNet diberi label Singing,
+    # Chant, Mantra, Humming, bahkan Music. Jika indikasi vokal
+    # manusia cukup kuat, jangan ditolak hanya karena ada skor musik.
+    if human_voice_score >= 0.10:
+        return details
 
     # --------------------------------------------------------
     # 1. SUARA HEWAN
@@ -621,7 +638,7 @@ def validate_ghunnah_audio_type(
         music_score
         >= MUSIC_REJECT_SCORE
         and human_voice_score
-        < MIN_HUMAN_VOICE_SCORE
+        < 0.025
         and music_score
         >= (
             human_voice_score
@@ -643,8 +660,8 @@ def validate_ghunnah_audio_type(
     # menemukan indikasi vokal manusia, input ditolak.
     if (
         human_voice_score
-        < MIN_HUMAN_VOICE_SCORE
-        and top_score >= 0.35
+        < 0.020
+        and top_score >= 0.55
     ):
         details["passed"] = False
 
@@ -1437,7 +1454,10 @@ def run_analysis(
 
     except SilentAudioError:
         st.warning(
-            "Suara tidak terdengar."
+            "Suara terlalu pelan atau tidak cukup jelas untuk dianalisis."
+        )
+        st.caption(
+            "Coba dekatkan mikrofon dan baca ghunnah dengan volume normal."
         )
         return
 
