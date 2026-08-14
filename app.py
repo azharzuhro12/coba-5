@@ -90,6 +90,22 @@ MIN_VAD_SPEECH_SECONDS = 0.30
 MIN_VAD_SPEECH_P75_DBFS = -43.0
 MIN_AUDIO_DYNAMIC_RANGE_DB = 4.5
 
+
+# Gate voiced-speech khusus untuk menolak bisikan/noise.
+# Ghunnah diharapkan memiliki bagian dengung/voicing yang periodik.
+PYIN_FMIN_HZ = 65.0
+PYIN_FMAX_HZ = 500.0
+MIN_VOICED_RATIO = 0.08
+MIN_VOICED_SECONDS = 0.30
+MIN_MEDIAN_VOICED_PROBABILITY = 0.45
+
+# Level minimum bagian voiced. Ini lebih longgar daripada suara normal,
+# tetapi cukup untuk menolak bisikan/noise yang sangat lemah.
+MIN_VOICED_P75_DBFS = -42.0
+
+# Noise broadband umumnya memiliki spectral flatness tinggi.
+MAX_MEDIAN_SPECTRAL_FLATNESS = 0.35
+
 # Top-label YAMNet yang dianggap bukan ucapan jika indikasi
 # speech/recitation rendah.
 NO_VOICE_TOP_KEYWORDS = (
@@ -726,6 +742,224 @@ def get_webrtc_vad_metrics(
     }
 
 
+def get_voicing_metrics(
+    waveform: np.ndarray,
+) -> dict:
+    """
+    Ukur apakah audio memiliki bagian voiced/berpitch yang cukup.
+
+    Tujuan:
+    - noise broadband -> biasanya pitch tidak stabil/tidak terdeteksi;
+    - bisikan -> umumnya tidak memiliki periodic voicing yang kuat;
+    - ghunnah -> diharapkan memiliki bagian dengung voiced.
+    """
+    waveform = np.asarray(
+        waveform,
+        dtype=np.float32,
+    )
+
+    if waveform.size == 0:
+        return {
+            "voiced_ratio": 0.0,
+            "voiced_seconds": 0.0,
+            "median_voiced_probability": 0.0,
+            "median_f0_hz": 0.0,
+            "voiced_p75_dbfs": -120.0,
+            "median_spectral_flatness": 1.0,
+        }
+
+    # Batasi agar inference tetap ringan.
+    max_samples = int(
+        SAMPLE_RATE
+        * 8.0
+    )
+
+    y = waveform[
+        :max_samples
+    ]
+
+    # --------------------------------------------------------
+    # Pitch / voiced detection
+    # --------------------------------------------------------
+    try:
+        f0, voiced_flag, voiced_prob = librosa.pyin(
+            y,
+            fmin=PYIN_FMIN_HZ,
+            fmax=PYIN_FMAX_HZ,
+            sr=SAMPLE_RATE,
+            frame_length=2048,
+            hop_length=HOP_LENGTH,
+        )
+    except Exception:
+        f0 = None
+        voiced_flag = None
+        voiced_prob = None
+
+    if (
+        f0 is None
+        or voiced_flag is None
+        or len(voiced_flag) == 0
+    ):
+        voiced_ratio = 0.0
+        voiced_seconds = 0.0
+        median_voiced_probability = 0.0
+        median_f0_hz = 0.0
+    else:
+        voiced_flag = np.asarray(
+            voiced_flag,
+            dtype=bool,
+        )
+
+        voiced_ratio = float(
+            np.mean(
+                voiced_flag
+            )
+        )
+
+        voiced_seconds = float(
+            np.sum(
+                voiced_flag
+            )
+            * HOP_LENGTH
+            / SAMPLE_RATE
+        )
+
+        if voiced_prob is not None:
+            vp = np.asarray(
+                voiced_prob,
+                dtype=np.float32,
+            )
+
+            valid_vp = vp[
+                np.isfinite(
+                    vp
+                )
+            ]
+
+            median_voiced_probability = (
+                float(
+                    np.median(
+                        valid_vp
+                    )
+                )
+                if valid_vp.size
+                else 0.0
+            )
+        else:
+            median_voiced_probability = 0.0
+
+        f0_array = np.asarray(
+            f0,
+            dtype=np.float32,
+        )
+
+        valid_f0 = f0_array[
+            np.isfinite(
+                f0_array
+            )
+        ]
+
+        median_f0_hz = (
+            float(
+                np.median(
+                    valid_f0
+                )
+            )
+            if valid_f0.size
+            else 0.0
+        )
+
+    # --------------------------------------------------------
+    # RMS frame: seberapa keras bagian yang terdeteksi voiced?
+    # --------------------------------------------------------
+    rms = librosa.feature.rms(
+        y=y,
+        frame_length=2048,
+        hop_length=HOP_LENGTH,
+        center=True,
+    )[0]
+
+    rms_dbfs = (
+        20.0
+        * np.log10(
+            np.maximum(
+                rms,
+                1e-12,
+            )
+        )
+    )
+
+    if (
+        voiced_flag is not None
+        and len(voiced_flag) > 0
+    ):
+        min_len = min(
+            len(voiced_flag),
+            len(rms_dbfs),
+        )
+
+        vf = voiced_flag[
+            :min_len
+        ]
+
+        rd = rms_dbfs[
+            :min_len
+        ]
+
+        voiced_db = rd[
+            vf
+        ]
+
+        voiced_p75_dbfs = (
+            float(
+                np.percentile(
+                    voiced_db,
+                    75,
+                )
+            )
+            if voiced_db.size
+            else -120.0
+        )
+    else:
+        voiced_p75_dbfs = -120.0
+
+    # --------------------------------------------------------
+    # Spectral flatness: noise broadband cenderung lebih tinggi.
+    # --------------------------------------------------------
+    flatness = librosa.feature.spectral_flatness(
+        y=y,
+        n_fft=1024,
+        hop_length=HOP_LENGTH,
+    )[0]
+
+    median_spectral_flatness = float(
+        np.median(
+            flatness
+        )
+    ) if flatness.size else 1.0
+
+    return {
+        "voiced_ratio": float(
+            voiced_ratio
+        ),
+        "voiced_seconds": float(
+            voiced_seconds
+        ),
+        "median_voiced_probability": float(
+            median_voiced_probability
+        ),
+        "median_f0_hz": float(
+            median_f0_hz
+        ),
+        "voiced_p75_dbfs": float(
+            voiced_p75_dbfs
+        ),
+        "median_spectral_flatness": float(
+            median_spectral_flatness
+        ),
+    }
+
+
 def validate_ghunnah_audio_type(
     waveform: np.ndarray,
 ) -> dict:
@@ -765,6 +999,15 @@ def validate_ghunnah_audio_type(
         vad_metrics[
             "vad_speech_seconds"
         ]
+    )
+
+    # --------------------------------------------------------
+    # LAPIS 1B: VOICED / PITCH GATE
+    # --------------------------------------------------------
+    voicing_metrics = (
+        get_voicing_metrics(
+            waveform
+        )
     )
 
     # --------------------------------------------------------
@@ -887,6 +1130,7 @@ def validate_ghunnah_audio_type(
 
     details = {
         **vad_metrics,
+        **voicing_metrics,
         "passed": True,
         "top_label": top_label,
         "top_score": top_score,
@@ -942,6 +1186,89 @@ def validate_ghunnah_audio_type(
             "audio_dynamic_range_db"
         ]
     )
+
+    # --------------------------------------------------------
+    # 0A. BISIKAN / NOISE TANPA VOICING YANG CUKUP
+    # --------------------------------------------------------
+    voiced_ratio = float(
+        voicing_metrics[
+            "voiced_ratio"
+        ]
+    )
+
+    voiced_seconds = float(
+        voicing_metrics[
+            "voiced_seconds"
+        ]
+    )
+
+    median_voiced_probability = float(
+        voicing_metrics[
+            "median_voiced_probability"
+        ]
+    )
+
+    voiced_p75_dbfs = float(
+        voicing_metrics[
+            "voiced_p75_dbfs"
+        ]
+    )
+
+    median_spectral_flatness = float(
+        voicing_metrics[
+            "median_spectral_flatness"
+        ]
+    )
+
+    # Noise/bisikan ringan tidak boleh masuk CNN hanya karena VAD
+    # mendeteksi beberapa frame sebagai speech.
+    insufficient_voicing = (
+        voiced_ratio < MIN_VOICED_RATIO
+        or voiced_seconds < MIN_VOICED_SECONDS
+    )
+
+    weak_periodicity = (
+        median_voiced_probability
+        < MIN_MEDIAN_VOICED_PROBABILITY
+    )
+
+    voiced_too_quiet = (
+        voiced_p75_dbfs
+        < MIN_VOICED_P75_DBFS
+    )
+
+    noise_like_spectrum = (
+        median_spectral_flatness
+        > MAX_MEDIAN_SPECTRAL_FLATNESS
+    )
+
+    # Tolak jika benar-benar tidak ada voicing yang cukup.
+    if (
+        insufficient_voicing
+        and (
+            weak_periodicity
+            or voiced_too_quiet
+            or noise_like_spectrum
+        )
+    ):
+        details["passed"] = False
+
+        raise SilentAudioError(
+            "Suara bacaan tidak terdengar dengan cukup jelas."
+        )
+
+    # Walaupun durasi voiced sedikit lolos, audio yang sangat pelan
+    # DAN spektrumnya mirip noise tetap ditolak.
+    if (
+        voiced_too_quiet
+        and noise_like_spectrum
+        and trusted_human_score < 0.12
+    ):
+        details["passed"] = False
+
+        raise SilentAudioError(
+            "Audio terlalu lemah atau lebih menyerupai noise/bisikan."
+        )
 
     # --------------------------------------------------------
     # 0. NO-VOICE / NOISE KAMERA / MIC HISS
@@ -1864,10 +2191,11 @@ def run_analysis(
 
     except SilentAudioError:
         st.warning(
-            "Suara tidak terdengar."
+            "Suara bacaan tidak terdengar dengan cukup jelas."
         )
         st.caption(
-            "Pastikan ada suara bacaan manusia yang jelas sebelum dianalisis."
+            "Bisikan, noise ringan, atau audio tanpa dengung/voicing yang cukup "
+            "tidak akan diteruskan ke CNN."
         )
         return
 
