@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import html
-import io
 import os
 import random
 import tempfile
@@ -12,1387 +11,168 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import tensorflow as tf
-import tensorflow_hub as hub
-import webrtcvad
 from huggingface_hub import InferenceClient
 from pydub import AudioSegment
 
 
 # ============================================================
-# KONFIGURASI SESUAI NOTEBOOK skripsi-cnn-slm-eval-fixed (13)
+# KONFIGURASI
 # ============================================================
 APP_DIR = Path(__file__).resolve().parent
 
-SAMPLE_RATE = 16000
+SR = 16000
 N_MELS = 64
 N_FFT = 1024
 HOP_LENGTH = 256
-SILENCE_TOP_DB = 30
+TOP_DB = 30
+MAX_FRAMES = 501
 
-REFERENCE_DURATION = 8.0
-REFERENCE_SAMPLES = int(SAMPLE_RATE * REFERENCE_DURATION)
-MAX_FRAMES = 1 + REFERENCE_SAMPLES // HOP_LENGTH
+INPUT_SHAPE = (N_MELS, MAX_FRAMES, 1)
+DROPOUT = 0.30
+MIN_BENAR = 0.50
 
-CNN_INPUT_SHAPE = (N_MELS, MAX_FRAMES, 1)
-MODEL_DROPOUT = 0.30
+SILENCE_RMS_DBFS = -38.0
+SILENCE_PEAK = 0.015
+ACTIVE_DBFS = -34.0
+MIN_ACTIVE_SEC = 0.50
+MIN_ACTIVE_RATIO = 0.025
 
-# Output sigmoid merupakan P(SALAH).
-# Keputusan aplikasi memakai P(BENAR) dengan batas minimum 50%.
-CLASSIFICATION_THRESHOLD = 0.50
+QWEN_ID = "Qwen/Qwen2.5-1.5B-Instruct"
+QWEN_NAME = "Qwen2.5-1.5B"
 
-SLM_MODEL_NAME = "Qwen2.5-1.5B"
-SLM_MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
-SLM_MAX_NEW_TOKENS = 80
-SLM_TEMPERATURE = 0.4
-
-# Deteksi audio hening/noise kecil sebelum CNN.
-SILENCE_RMS_DBFS_THRESHOLD = -48.0
-SILENCE_PEAK_THRESHOLD = 0.005
-
-# Syarat aktivitas suara absolut.
-# Bukan threshold relatif terhadap suara paling keras di rekaman.
-ACTIVE_FRAME_DBFS_THRESHOLD = -44.0
-MIN_ACTIVE_DURATION_SECONDS = 0.25
-MIN_ACTIVE_FRAME_RATIO = 0.010
-
-# Pengaman tambahan agar hasil yang meragukan tidak langsung disebut BENAR.
-# Ini adalah rejection rule di level aplikasi, bukan threshold training CNN.
-MIN_BENAR_PROBABILITY = 0.50
-
-
-# ============================================================
-# FILTER JENIS AUDIO / OUT-OF-DISTRIBUTION (OOD)
-# ============================================================
-# YAMNet hanya menjadi gerbang sebelum CNN.
-# CNN skripsi, preprocessing, dan keputusan BENAR/SALAH tidak diubah.
-YAMNET_HANDLE = "https://tfhub.dev/google/yamnet/1"
-
-# Maksimal audio yang diperiksa YAMNet agar tetap ringan.
-YAMNET_CHECK_SECONDS = 10.0
-
-# Ambang dibuat konservatif supaya tilawah/chant tidak mudah ditolak.
-MIN_HUMAN_VOICE_SCORE = 0.035
-ANIMAL_REJECT_SCORE = 0.28
-MUSIC_REJECT_SCORE = 0.45
-NONVOICE_MARGIN = 0.15
-
-
-# WebRTC VAD: lapisan tambahan untuk memastikan ada pola speech/voice.
-# Mode 2 = cukup agresif, tetapi masih lebih ramah terhadap bacaan
-# dibanding mode 3.
-WEBRTC_VAD_MODE = 2
-WEBRTC_FRAME_MS = 30
-MIN_VAD_SPEECH_RATIO = 0.12
-MIN_VAD_SPEECH_SECONDS = 0.30
-
-
-# Gate tambahan untuk membedakan ucapan nyata dari hiss/noise mikrofon.
-MIN_VAD_SPEECH_P75_DBFS = -43.0
-MIN_AUDIO_DYNAMIC_RANGE_DB = 4.5
-
-
-# Gate voiced-speech khusus untuk menolak bisikan/noise.
-# Ghunnah diharapkan memiliki bagian dengung/voicing yang periodik.
-PYIN_FMIN_HZ = 65.0
-PYIN_FMAX_HZ = 500.0
-MIN_VOICED_RATIO = 0.08
-MIN_VOICED_SECONDS = 0.30
-MIN_MEDIAN_VOICED_PROBABILITY = 0.45
-
-# Level minimum bagian voiced. Ini lebih longgar daripada suara normal,
-# tetapi cukup untuk menolak bisikan/noise yang sangat lemah.
-MIN_VOICED_P75_DBFS = -42.0
-
-# Noise broadband umumnya memiliki spectral flatness tinggi.
-MAX_MEDIAN_SPECTRAL_FLATNESS = 0.35
-
-# Top-label YAMNet yang dianggap bukan ucapan jika indikasi
-# speech/recitation rendah.
-NO_VOICE_TOP_KEYWORDS = (
-    "silence",
-    "white noise",
-    "pink noise",
-    "static",
-    "background noise",
-    "environmental noise",
-    "mechanical fan",
-    "air conditioning",
-    "wind noise",
-    "rustle",
-    "click",
-    "typing",
-    "keyboard",
-    "camera",
-)
-
-# Kategori manusia dibuat lebih presisi.
-# Jangan memakai kata "vocal" karena bisa mencocokkan "animal vocalization".
-SPEECH_KEYWORDS = (
-    "speech",
-    "speaking",
-    "conversation",
-    "narration",
-    "whisper",
-)
-
-RECITATION_KEYWORDS = (
-    "chant",
-    "mantra",
-    "humming",
-)
-
-SINGING_KEYWORDS = (
-    "singing",
-)
-
-ANIMAL_KEYWORDS = (
-    "animal",
-    "dog",
-    "cat",
-    "bird",
-    "bark",
-    "meow",
-    "roar",
-    "growl",
-    "insect",
-    "cricket",
-    "frog",
-    "horse",
-    "cow",
-    "cattle",
-    "pig",
-    "sheep",
-    "goat",
-    "chicken",
-    "duck",
-    "goose",
-)
-
-MUSIC_KEYWORDS = (
-    "music",
-    "musical instrument",
-    "guitar",
-    "piano",
-    "keyboard",
-    "drum",
-    "percussion",
-    "violin",
-    "viola",
-    "cello",
-    "flute",
-    "saxophone",
-    "trumpet",
-    "orchestra",
-    "rock",
-    "pop music",
-    "hip hop",
-    "jazz",
-    "classical music",
-    "electronic music",
-    "techno",
-    "disco",
-)
-
-MODEL_CANDIDATES = [
+MODEL_FILES = [
     APP_DIR / "best_cnn.h5",
     APP_DIR / "best_cnn.keras",
     APP_DIR / "best_cnn.weights.h5",
 ]
 
-METADATA_CANDIDATES = [
+METADATA_FILES = [
     APP_DIR / "metadata.csv",
     APP_DIR / "feedback_kb.csv",
 ]
 
 
+# ============================================================
+# UI DASAR
+# ============================================================
 st.set_page_config(
     page_title="Ghunnah",
     page_icon="🎙️",
     layout="centered",
 )
 
-
-CUSTOM_CSS = """
-<style>
-    .stApp {
-        background:
-            radial-gradient(
-                circle at 10% 0%,
-                rgba(124, 58, 237, .09),
-                transparent 28rem
-            ),
-            radial-gradient(
-                circle at 92% 4%,
-                rgba(14, 165, 233, .10),
-                transparent 27rem
-            ),
-            #f8fafc;
-    }
-
-    .hero {
-        padding: 1.7rem 1.8rem;
-        border-radius: 24px;
-        background: linear-gradient(
-            135deg,
-            #312e81 0%,
-            #6d28d9 52%,
-            #0284c7 100%
-        );
-        color: white;
-        margin-bottom: 1rem;
-        box-shadow: 0 18px 48px rgba(49, 46, 129, .20);
-    }
-
-    .hero h1 {
-        margin: 0;
-        font-size: 2.15rem;
-        letter-spacing: -0.035em;
-    }
-
-    .hero p {
-        margin: .55rem 0 0;
-        opacity: .94;
-        line-height: 1.55;
-    }
-
-    .feedback-card {
-        padding: 1rem 1.15rem;
-        border-radius: 18px;
-        background: rgba(255,255,255,.92);
-        border: 1px solid rgba(148,163,184,.30);
-        border-left: 5px solid #7c3aed;
-        line-height: 1.65;
-        font-size: 1.04rem;
-        margin-top: .6rem;
-    }
-</style>
-"""
-
 st.markdown(
-    CUSTOM_CSS,
+    """
+    <style>
+        .stApp {
+            background: #f8fafc;
+        }
+
+        .hero {
+            padding: 1.6rem;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #312e81, #6d28d9, #0284c7);
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .feedback-card {
+            padding: 1rem 1.1rem;
+            border-radius: 16px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-left: 5px solid #7c3aed;
+            line-height: 1.6;
+        }
+    </style>
+    """,
     unsafe_allow_html=True,
 )
 
 
 # ============================================================
-# SECRETS
+# SECRET
 # ============================================================
-def read_secret_or_env(
-    name: str,
-    default: str = "",
-) -> str:
+def get_secret(name: str, default: str = "") -> str:
     try:
-        return str(
-            st.secrets[name]
-        ).strip()
+        return str(st.secrets[name]).strip()
     except Exception:
-        return str(
-            os.getenv(
-                name,
-                default,
-            )
-        ).strip()
+        return str(os.getenv(name, default)).strip()
 
 
-HF_TOKEN = read_secret_or_env(
-    "HF_TOKEN"
-)
-
-HF_PROVIDER = (
-    read_secret_or_env(
-        "HF_PROVIDER",
-        "auto",
-    )
-    or "auto"
-)
+HF_TOKEN = get_secret("HF_TOKEN")
+HF_PROVIDER = get_secret("HF_PROVIDER", "auto") or "auto"
 
 
 # ============================================================
 # MODEL CNN
 # ============================================================
-def build_ghunnah_cnn(
-    input_shape=CNN_INPUT_SHAPE,
-    dropout=MODEL_DROPOUT,
-):
-    """
-    Arsitektur persis seperti notebook (13).
-    Output sigmoid merupakan P(SALAH).
-    """
+def build_model() -> tf.keras.Model:
     inputs = tf.keras.Input(
-        shape=input_shape,
+        shape=INPUT_SHAPE,
         name="logmel_spectrogram",
     )
 
-    x = tf.keras.layers.Conv2D(
-        16,
-        kernel_size=3,
-        padding="same",
-    )(inputs)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.ReLU()(x)
-    x = tf.keras.layers.MaxPooling2D(
-        pool_size=(2, 1)
-    )(x)
+    x = inputs
 
-    x = tf.keras.layers.Conv2D(
-        32,
-        kernel_size=3,
-        padding="same",
-    )(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.ReLU()(x)
-    x = tf.keras.layers.MaxPooling2D(
-        pool_size=(2, 1)
-    )(x)
+    for filters in (16, 32, 64):
+        x = tf.keras.layers.Conv2D(
+            filters,
+            kernel_size=3,
+            padding="same",
+        )(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.ReLU()(x)
+        x = tf.keras.layers.MaxPooling2D((2, 1))(x)
 
-    x = tf.keras.layers.Conv2D(
-        64,
-        kernel_size=3,
-        padding="same",
-    )(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.ReLU()(x)
-    x = tf.keras.layers.MaxPooling2D(
-        pool_size=(2, 1)
-    )(x)
-
-    x = tf.keras.layers.SpatialDropout2D(
-        0.15
-    )(x)
-
+    x = tf.keras.layers.SpatialDropout2D(0.15)(x)
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
+    x = tf.keras.layers.Dropout(DROPOUT)(x)
+    x = tf.keras.layers.Dense(32, activation="relu")(x)
+    x = tf.keras.layers.Dropout(DROPOUT / 2)(x)
 
-    x = tf.keras.layers.Dropout(
-        dropout
-    )(x)
-
-    x = tf.keras.layers.Dense(
-        32,
-        activation="relu",
-    )(x)
-
-    x = tf.keras.layers.Dropout(
-        dropout / 2
-    )(x)
-
-    probabilities = tf.keras.layers.Dense(
+    outputs = tf.keras.layers.Dense(
         1,
         activation="sigmoid",
         name="probability",
     )(x)
 
     return tf.keras.Model(
-        inputs=inputs,
-        outputs=probabilities,
+        inputs,
+        outputs,
         name="GhunnahCNN",
     )
 
 
 def find_model_path() -> Path | None:
-    for path in MODEL_CANDIDATES:
-        if path.exists():
-            return path
-    return None
-
-
-@st.cache_resource(
-    show_spinner="Memuat model CNN..."
-)
-def load_best_cnn(
-    model_path_text: str,
-):
-    model_path = Path(
-        model_path_text
+    return next(
+        (path for path in MODEL_FILES if path.exists()),
+        None,
     )
 
-    # Mendukung:
-    # 1) full model .keras
-    # 2) full model .h5
-    # 3) weights-only .h5
+
+@st.cache_resource(show_spinner="Memuat model CNN...")
+def load_model(path_text: str) -> tf.keras.Model:
+    path = Path(path_text)
+
     try:
         model = tf.keras.models.load_model(
-            model_path,
+            path,
             compile=False,
         )
     except Exception:
-        model = build_ghunnah_cnn(
-            dropout=MODEL_DROPOUT
-        )
-        model.load_weights(
-            model_path
-        )
+        model = build_model()
+        model.load_weights(path)
 
-    expected_shape = (
-        None,
-        N_MELS,
-        MAX_FRAMES,
-        1,
-    )
+    expected = (None, N_MELS, MAX_FRAMES, 1)
 
-    actual_shape = tuple(
-        model.input_shape
-    )
-
-    if actual_shape != expected_shape:
+    if tuple(model.input_shape) != expected:
         raise ValueError(
-            "Input model tidak cocok dengan notebook (13). "
-            f"Diharapkan {expected_shape}, diperoleh {actual_shape}."
+            f"Input model harus {expected}, "
+            f"tetapi diperoleh {model.input_shape}."
         )
 
     return model
-
-
-# ============================================================
-# MODEL FILTER AUDIO (YAMNet)
-# ============================================================
-@st.cache_resource(
-    show_spinner="Memuat filter jenis audio..."
-)
-def load_yamnet():
-    """
-    YAMNet mengenali kelas audio umum (speech, musik, hewan, dll).
-    Dipakai hanya untuk menolak input yang jelas bukan suara bacaan.
-    """
-    model = hub.load(
-        YAMNET_HANDLE
-    )
-
-    class_map_path = (
-        model
-        .class_map_path()
-        .numpy()
-    )
-
-    if isinstance(
-        class_map_path,
-        bytes,
-    ):
-        class_map_path = (
-            class_map_path.decode(
-                "utf-8"
-            )
-        )
-
-    class_names = (
-        pd.read_csv(
-            class_map_path
-        )["display_name"]
-        .astype(str)
-        .tolist()
-    )
-
-    return (
-        model,
-        class_names,
-    )
-
-
-def keyword_class_score(
-    class_names: list[str],
-    class_scores: np.ndarray,
-    keywords: tuple[str, ...],
-) -> float:
-    """
-    Ambil skor maksimum dari kelas-kelas YAMNet yang
-    nama kelasnya mengandung salah satu keyword.
-    """
-    indices = []
-
-    for index, class_name in enumerate(
-        class_names
-    ):
-        lowered = (
-            class_name
-            .lower()
-        )
-
-        if any(
-            keyword in lowered
-            for keyword in keywords
-        ):
-            indices.append(
-                index
-            )
-
-    if not indices:
-        return 0.0
-
-    return float(
-        np.max(
-            class_scores[
-                indices
-            ]
-        )
-    )
-
-
-def get_webrtc_vad_metrics(
-    waveform: np.ndarray,
-) -> dict:
-    """
-    WebRTC VAD + pengukuran energi frame.
-
-    Selain rasio speech, fungsi ini mengukur:
-    - energi frame yang dianggap speech;
-    - noise floor;
-    - dynamic range.
-
-    Noise kamera/mikrofon kadang salah dianggap speech oleh VAD,
-    tetapi biasanya energinya rendah dan relatif konstan.
-    """
-    waveform = np.asarray(
-        waveform,
-        dtype=np.float32,
-    )
-
-    empty_result = {
-        "vad_speech_ratio": 0.0,
-        "vad_speech_seconds": 0.0,
-        "vad_total_frames": 0,
-        "vad_speech_frames": 0,
-        "vad_speech_p75_dbfs": -120.0,
-        "audio_p20_dbfs": -120.0,
-        "audio_p90_dbfs": -120.0,
-        "audio_dynamic_range_db": 0.0,
-    }
-
-    if waveform.size == 0:
-        return empty_result
-
-    waveform = np.nan_to_num(
-        waveform,
-        nan=0.0,
-        posinf=0.0,
-        neginf=0.0,
-    )
-
-    waveform = np.clip(
-        waveform,
-        -1.0,
-        1.0,
-    )
-
-    pcm16 = (
-        waveform
-        * 32767.0
-    ).astype(
-        np.int16
-    )
-
-    frame_samples = int(
-        SAMPLE_RATE
-        * WEBRTC_FRAME_MS
-        / 1000
-    )
-
-    total_frames = (
-        len(pcm16)
-        // frame_samples
-    )
-
-    if total_frames <= 0:
-        return empty_result
-
-    vad = webrtcvad.Vad(
-        WEBRTC_VAD_MODE
-    )
-
-    speech_frames = 0
-    all_frame_dbfs = []
-    speech_frame_dbfs = []
-
-    for frame_index in range(
-        total_frames
-    ):
-        start_index = (
-            frame_index
-            * frame_samples
-        )
-
-        end_index = (
-            start_index
-            + frame_samples
-        )
-
-        frame_pcm = pcm16[
-            start_index:end_index
-        ]
-
-        frame_float = (
-            frame_pcm.astype(
-                np.float32
-            )
-            / 32768.0
-        )
-
-        frame_rms = float(
-            np.sqrt(
-                np.mean(
-                    np.square(
-                        frame_float
-                    )
-                )
-                + 1e-12
-            )
-        )
-
-        frame_dbfs = float(
-            20.0
-            * np.log10(
-                max(
-                    frame_rms,
-                    1e-12,
-                )
-            )
-        )
-
-        all_frame_dbfs.append(
-            frame_dbfs
-        )
-
-        try:
-            is_speech = vad.is_speech(
-                frame_pcm.tobytes(),
-                SAMPLE_RATE,
-            )
-        except Exception:
-            is_speech = False
-
-        if is_speech:
-            speech_frames += 1
-            speech_frame_dbfs.append(
-                frame_dbfs
-            )
-
-    speech_ratio = (
-        speech_frames
-        / float(
-            total_frames
-        )
-    )
-
-    speech_seconds = (
-        speech_frames
-        * WEBRTC_FRAME_MS
-        / 1000.0
-    )
-
-    all_frame_dbfs = np.asarray(
-        all_frame_dbfs,
-        dtype=np.float32,
-    )
-
-    audio_p20_dbfs = float(
-        np.percentile(
-            all_frame_dbfs,
-            20,
-        )
-    )
-
-    audio_p90_dbfs = float(
-        np.percentile(
-            all_frame_dbfs,
-            90,
-        )
-    )
-
-    audio_dynamic_range_db = float(
-        audio_p90_dbfs
-        - audio_p20_dbfs
-    )
-
-    if speech_frame_dbfs:
-        vad_speech_p75_dbfs = float(
-            np.percentile(
-                np.asarray(
-                    speech_frame_dbfs,
-                    dtype=np.float32,
-                ),
-                75,
-            )
-        )
-    else:
-        vad_speech_p75_dbfs = -120.0
-
-    return {
-        "vad_speech_ratio": float(
-            speech_ratio
-        ),
-        "vad_speech_seconds": float(
-            speech_seconds
-        ),
-        "vad_total_frames": int(
-            total_frames
-        ),
-        "vad_speech_frames": int(
-            speech_frames
-        ),
-        "vad_speech_p75_dbfs": float(
-            vad_speech_p75_dbfs
-        ),
-        "audio_p20_dbfs": float(
-            audio_p20_dbfs
-        ),
-        "audio_p90_dbfs": float(
-            audio_p90_dbfs
-        ),
-        "audio_dynamic_range_db": float(
-            audio_dynamic_range_db
-        ),
-    }
-
-
-def get_voicing_metrics(
-    waveform: np.ndarray,
-) -> dict:
-    """
-    Ukur apakah audio memiliki bagian voiced/berpitch yang cukup.
-
-    Tujuan:
-    - noise broadband -> biasanya pitch tidak stabil/tidak terdeteksi;
-    - bisikan -> umumnya tidak memiliki periodic voicing yang kuat;
-    - ghunnah -> diharapkan memiliki bagian dengung voiced.
-    """
-    waveform = np.asarray(
-        waveform,
-        dtype=np.float32,
-    )
-
-    if waveform.size == 0:
-        return {
-            "voiced_ratio": 0.0,
-            "voiced_seconds": 0.0,
-            "median_voiced_probability": 0.0,
-            "median_f0_hz": 0.0,
-            "voiced_p75_dbfs": -120.0,
-            "median_spectral_flatness": 1.0,
-        }
-
-    # Batasi agar inference tetap ringan.
-    max_samples = int(
-        SAMPLE_RATE
-        * 8.0
-    )
-
-    y = waveform[
-        :max_samples
-    ]
-
-    # --------------------------------------------------------
-    # Pitch / voiced detection
-    # --------------------------------------------------------
-    try:
-        f0, voiced_flag, voiced_prob = librosa.pyin(
-            y,
-            fmin=PYIN_FMIN_HZ,
-            fmax=PYIN_FMAX_HZ,
-            sr=SAMPLE_RATE,
-            frame_length=2048,
-            hop_length=HOP_LENGTH,
-        )
-    except Exception:
-        f0 = None
-        voiced_flag = None
-        voiced_prob = None
-
-    if (
-        f0 is None
-        or voiced_flag is None
-        or len(voiced_flag) == 0
-    ):
-        voiced_ratio = 0.0
-        voiced_seconds = 0.0
-        median_voiced_probability = 0.0
-        median_f0_hz = 0.0
-    else:
-        voiced_flag = np.asarray(
-            voiced_flag,
-            dtype=bool,
-        )
-
-        voiced_ratio = float(
-            np.mean(
-                voiced_flag
-            )
-        )
-
-        voiced_seconds = float(
-            np.sum(
-                voiced_flag
-            )
-            * HOP_LENGTH
-            / SAMPLE_RATE
-        )
-
-        if voiced_prob is not None:
-            vp = np.asarray(
-                voiced_prob,
-                dtype=np.float32,
-            )
-
-            valid_vp = vp[
-                np.isfinite(
-                    vp
-                )
-            ]
-
-            median_voiced_probability = (
-                float(
-                    np.median(
-                        valid_vp
-                    )
-                )
-                if valid_vp.size
-                else 0.0
-            )
-        else:
-            median_voiced_probability = 0.0
-
-        f0_array = np.asarray(
-            f0,
-            dtype=np.float32,
-        )
-
-        valid_f0 = f0_array[
-            np.isfinite(
-                f0_array
-            )
-        ]
-
-        median_f0_hz = (
-            float(
-                np.median(
-                    valid_f0
-                )
-            )
-            if valid_f0.size
-            else 0.0
-        )
-
-    # --------------------------------------------------------
-    # RMS frame: seberapa keras bagian yang terdeteksi voiced?
-    # --------------------------------------------------------
-    rms = librosa.feature.rms(
-        y=y,
-        frame_length=2048,
-        hop_length=HOP_LENGTH,
-        center=True,
-    )[0]
-
-    rms_dbfs = (
-        20.0
-        * np.log10(
-            np.maximum(
-                rms,
-                1e-12,
-            )
-        )
-    )
-
-    if (
-        voiced_flag is not None
-        and len(voiced_flag) > 0
-    ):
-        min_len = min(
-            len(voiced_flag),
-            len(rms_dbfs),
-        )
-
-        vf = voiced_flag[
-            :min_len
-        ]
-
-        rd = rms_dbfs[
-            :min_len
-        ]
-
-        voiced_db = rd[
-            vf
-        ]
-
-        voiced_p75_dbfs = (
-            float(
-                np.percentile(
-                    voiced_db,
-                    75,
-                )
-            )
-            if voiced_db.size
-            else -120.0
-        )
-    else:
-        voiced_p75_dbfs = -120.0
-
-    # --------------------------------------------------------
-    # Spectral flatness: noise broadband cenderung lebih tinggi.
-    # --------------------------------------------------------
-    flatness = librosa.feature.spectral_flatness(
-        y=y,
-        n_fft=1024,
-        hop_length=HOP_LENGTH,
-    )[0]
-
-    median_spectral_flatness = float(
-        np.median(
-            flatness
-        )
-    ) if flatness.size else 1.0
-
-    return {
-        "voiced_ratio": float(
-            voiced_ratio
-        ),
-        "voiced_seconds": float(
-            voiced_seconds
-        ),
-        "median_voiced_probability": float(
-            median_voiced_probability
-        ),
-        "median_f0_hz": float(
-            median_f0_hz
-        ),
-        "voiced_p75_dbfs": float(
-            voiced_p75_dbfs
-        ),
-        "median_spectral_flatness": float(
-            median_spectral_flatness
-        ),
-    }
-
-
-def validate_ghunnah_audio_type(
-    waveform: np.ndarray,
-) -> dict:
-    """
-    Filter OOD dua lapis:
-    1. WebRTC VAD -> apakah ada pola speech/voice?
-    2. YAMNet -> apakah dominan musik/hewan/non-bacaan?
-
-    CNN ghunnah hanya dijalankan jika input lolos dua pemeriksaan.
-    """
-    waveform = np.asarray(
-        waveform,
-        dtype=np.float32,
-    )
-
-    if waveform.size == 0:
-        raise SilentAudioError(
-            "Suara tidak terdengar."
-        )
-
-    # --------------------------------------------------------
-    # LAPIS 1: WEBRTC VAD
-    # --------------------------------------------------------
-    vad_metrics = (
-        get_webrtc_vad_metrics(
-            waveform
-        )
-    )
-
-    vad_speech_ratio = float(
-        vad_metrics[
-            "vad_speech_ratio"
-        ]
-    )
-
-    vad_speech_seconds = float(
-        vad_metrics[
-            "vad_speech_seconds"
-        ]
-    )
-
-    # --------------------------------------------------------
-    # LAPIS 1B: VOICED / PITCH GATE
-    # --------------------------------------------------------
-    voicing_metrics = (
-        get_voicing_metrics(
-            waveform
-        )
-    )
-
-    # --------------------------------------------------------
-    # LAPIS 2: YAMNET
-    # --------------------------------------------------------
-    max_samples = int(
-        SAMPLE_RATE
-        * YAMNET_CHECK_SECONDS
-    )
-
-    waveform_for_yamnet = waveform[
-        :max_samples
-    ]
-
-    yamnet_model, class_names = (
-        load_yamnet()
-    )
-
-    scores, _, _ = yamnet_model(
-        tf.convert_to_tensor(
-            waveform_for_yamnet,
-            dtype=tf.float32,
-        )
-    )
-
-    scores = np.asarray(
-        scores.numpy(),
-        dtype=np.float32,
-    )
-
-    if scores.size == 0:
-        raise InvalidGhunnahAudioError(
-            "Jenis audio tidak dapat divalidasi. Silakan rekam ulang.",
-            vad_metrics,
-        )
-
-    mean_scores = np.mean(
-        scores,
-        axis=0,
-    )
-
-    presence_scores = np.percentile(
-        scores,
-        90,
-        axis=0,
-    )
-
-    top_indices = np.argsort(
-        mean_scores
-    )[::-1][:5]
-
-    top5 = [
-        {
-            "label": str(
-                class_names[
-                    int(index)
-                ]
-            ),
-            "score": float(
-                mean_scores[
-                    int(index)
-                ]
-            ),
-        }
-        for index in top_indices
-    ]
-
-    top_label = (
-        top5[0]["label"]
-    )
-
-    top_score = float(
-        top5[0]["score"]
-    )
-
-    speech_score = (
-        keyword_class_score(
-            class_names,
-            presence_scores,
-            SPEECH_KEYWORDS,
-        )
-    )
-
-    recitation_score = (
-        keyword_class_score(
-            class_names,
-            presence_scores,
-            RECITATION_KEYWORDS,
-        )
-    )
-
-    singing_score = (
-        keyword_class_score(
-            class_names,
-            presence_scores,
-            SINGING_KEYWORDS,
-        )
-    )
-
-    animal_score = (
-        keyword_class_score(
-            class_names,
-            mean_scores,
-            ANIMAL_KEYWORDS,
-        )
-    )
-
-    music_score = (
-        keyword_class_score(
-            class_names,
-            mean_scores,
-            MUSIC_KEYWORDS,
-        )
-    )
-
-    trusted_human_score = max(
-        speech_score,
-        recitation_score,
-    )
-
-    details = {
-        **vad_metrics,
-        **voicing_metrics,
-        "passed": True,
-        "top_label": top_label,
-        "top_score": top_score,
-        "top5": top5,
-        "speech_score": float(
-            speech_score
-        ),
-        "recitation_score": float(
-            recitation_score
-        ),
-        "singing_score": float(
-            singing_score
-        ),
-        "trusted_human_score": float(
-            trusted_human_score
-        ),
-        "animal_score": float(
-            animal_score
-        ),
-        "music_score": float(
-            music_score
-        ),
-    }
-
-    lowered_top = (
-        top_label
-        .lower()
-    )
-
-    top_is_animal = any(
-        keyword in lowered_top
-        for keyword in ANIMAL_KEYWORDS
-    )
-
-    top_is_music = any(
-        keyword in lowered_top
-        for keyword in MUSIC_KEYWORDS
-    )
-
-    top_is_no_voice = any(
-        keyword in lowered_top
-        for keyword in NO_VOICE_TOP_KEYWORDS
-    )
-
-    vad_speech_p75_dbfs = float(
-        vad_metrics[
-            "vad_speech_p75_dbfs"
-        ]
-    )
-
-    audio_dynamic_range_db = float(
-        vad_metrics[
-            "audio_dynamic_range_db"
-        ]
-    )
-
-    # --------------------------------------------------------
-    # 0A. BISIKAN / NOISE TANPA VOICING YANG CUKUP
-    # --------------------------------------------------------
-    voiced_ratio = float(
-        voicing_metrics[
-            "voiced_ratio"
-        ]
-    )
-
-    voiced_seconds = float(
-        voicing_metrics[
-            "voiced_seconds"
-        ]
-    )
-
-    median_voiced_probability = float(
-        voicing_metrics[
-            "median_voiced_probability"
-        ]
-    )
-
-    voiced_p75_dbfs = float(
-        voicing_metrics[
-            "voiced_p75_dbfs"
-        ]
-    )
-
-    median_spectral_flatness = float(
-        voicing_metrics[
-            "median_spectral_flatness"
-        ]
-    )
-
-    # Noise/bisikan ringan tidak boleh masuk CNN hanya karena VAD
-    # mendeteksi beberapa frame sebagai speech.
-    insufficient_voicing = (
-        voiced_ratio < MIN_VOICED_RATIO
-        or voiced_seconds < MIN_VOICED_SECONDS
-    )
-
-    weak_periodicity = (
-        median_voiced_probability
-        < MIN_MEDIAN_VOICED_PROBABILITY
-    )
-
-    voiced_too_quiet = (
-        voiced_p75_dbfs
-        < MIN_VOICED_P75_DBFS
-    )
-
-    noise_like_spectrum = (
-        median_spectral_flatness
-        > MAX_MEDIAN_SPECTRAL_FLATNESS
-    )
-
-    # Tolak jika benar-benar tidak ada voicing yang cukup.
-    if (
-        insufficient_voicing
-        and (
-            weak_periodicity
-            or voiced_too_quiet
-            or noise_like_spectrum
-        )
-    ):
-        details["passed"] = False
-
-        raise SilentAudioError(
-            "Suara bacaan tidak terdengar dengan cukup jelas."
-        )
-
-    # Walaupun durasi voiced sedikit lolos, audio yang sangat pelan
-    # DAN spektrumnya mirip noise tetap ditolak.
-    if (
-        voiced_too_quiet
-        and noise_like_spectrum
-        and trusted_human_score < 0.12
-    ):
-        details["passed"] = False
-
-        raise SilentAudioError(
-            "Audio terlalu lemah atau lebih menyerupai noise/bisikan."
-        )
-
-    # --------------------------------------------------------
-    # 0. NO-VOICE / NOISE KAMERA / MIC HISS
-    # --------------------------------------------------------
-    # VAD bisa false-positive pada hiss, fan, klik, atau noise perangkat.
-    # Karena itu frame VAD harus cukup keras DAN sinyal harus memiliki
-    # dinamika yang masuk akal untuk ucapan.
-    weak_voice_energy = (
-        vad_speech_p75_dbfs
-        < MIN_VAD_SPEECH_P75_DBFS
-    )
-
-    almost_constant_noise = (
-        audio_dynamic_range_db
-        < MIN_AUDIO_DYNAMIC_RANGE_DB
-    )
-
-    weak_yamnet_human = (
-        trusted_human_score
-        < 0.06
-    )
-
-    if (
-        (weak_voice_energy and weak_yamnet_human)
-        or (
-            almost_constant_noise
-            and weak_yamnet_human
-        )
-        or (
-            top_is_no_voice
-            and trusted_human_score < 0.10
-        )
-    ):
-        details["passed"] = False
-
-        raise SilentAudioError(
-            "Suara manusia tidak terdengar dengan cukup jelas."
-        )
-
-    # --------------------------------------------------------
-    # A. HEWAN: TOLAK TEGAS
-    # --------------------------------------------------------
-    # Suara hewan tidak boleh lolos hanya karena VAD salah
-    # membaca beberapa frame sebagai voice.
-    if (
-        top_is_animal
-        or animal_score >= 0.12
-    ):
-        # Pengecualian hanya jika indikasi bacaan manusia
-        # jauh lebih kuat daripada indikasi hewan.
-        if not (
-            trusted_human_score >= 0.25
-            and trusted_human_score
-            >= animal_score * 2.0
-            and vad_speech_ratio >= 0.20
-        ):
-            details["passed"] = False
-
-            raise InvalidGhunnahAudioError(
-                "Audio terdeteksi sebagai suara hewan atau bukan bacaan manusia. "
-                "Silakan gunakan rekaman bacaan ghunnah.",
-                details,
-            )
-
-    # --------------------------------------------------------
-    # B. MUSIK: TOLAK TEGAS
-    # --------------------------------------------------------
-    # Singing tidak dijadikan bukti bacaan.
-    # Lagu/vokal musik tetap harus ditolak.
-    if (
-        top_is_music
-        or music_score >= 0.15
-    ):
-        # Bacaan hanya diberi pengecualian jika ada bukti kuat
-        # speech/chant/mantra DAN VAD juga mendeteksi voice.
-        strong_recitation = (
-            trusted_human_score >= 0.22
-            and vad_speech_ratio >= 0.20
-            and trusted_human_score
-            >= music_score * 1.25
-        )
-
-        if not strong_recitation:
-            details["passed"] = False
-
-            raise InvalidGhunnahAudioError(
-                "Audio terdeteksi sebagai musik atau suara non-bacaan. "
-                "Silakan gunakan rekaman bacaan ghunnah.",
-                details,
-            )
-
-    # --------------------------------------------------------
-    # C. HARUS ADA SPEECH/VOICE YANG CUKUP
-    # --------------------------------------------------------
-    # Ini membuat suara lingkungan/hewan yang lolos dari YAMNet
-    # tidak langsung masuk CNN.
-    if (
-        vad_speech_ratio
-        < MIN_VAD_SPEECH_RATIO
-        or vad_speech_seconds
-        < MIN_VAD_SPEECH_SECONDS
-    ):
-        details["passed"] = False
-
-        raise InvalidGhunnahAudioError(
-            "Tidak terdeteksi pola suara manusia yang cukup untuk "
-            "dianalisis sebagai bacaan ghunnah.",
-            details,
-        )
-
-    # --------------------------------------------------------
-    # D. HARUS ADA INDIKASI BACAAN MANUSIA
-    # --------------------------------------------------------
-    # Singing saja tidak cukup agar lagu tidak lolos.
-    if trusted_human_score < 0.035:
-        details["passed"] = False
-
-        raise InvalidGhunnahAudioError(
-            "Audio belum dikenali sebagai suara bacaan manusia yang cukup. "
-            "Silakan gunakan rekaman bacaan ghunnah yang lebih jelas.",
-            details,
-        )
-
-    return details
 
 
 # ============================================================
@@ -1402,93 +182,44 @@ class SilentAudioError(Exception):
     pass
 
 
-class InvalidGhunnahAudioError(Exception):
-    """
-    Audio terdengar, tetapi bukan input yang sesuai untuk
-    klasifikasi bacaan ghunnah.
-    """
-
-    def __init__(
-        self,
-        message: str,
-        details: dict | None = None,
-    ):
-        super().__init__(message)
-        self.details = details or {}
-
-
 def decode_audio(
     audio_bytes: bytes,
     filename: str,
 ) -> np.ndarray:
-    """
-    Mencoba decode dengan librosa terlebih dahulu.
-    Jika gagal, gunakan ffmpeg melalui pydub.
+    suffix = Path(filename).suffix.lower() or ".audio"
 
-    File uploader tidak dibatasi ekstensi sehingga berbagai format
-    audio dapat dicoba.
-    """
-    suffix = (
-        Path(filename).suffix.lower()
-        or ".audio"
-    )
-
-    temp_path = None
+    with tempfile.NamedTemporaryFile(
+        suffix=suffix,
+        delete=False,
+    ) as temp:
+        temp.write(audio_bytes)
+        temp_path = Path(temp.name)
 
     try:
-        with tempfile.NamedTemporaryFile(
-            suffix=suffix,
-            delete=False,
-        ) as temp_file:
-            temp_file.write(
-                audio_bytes
-            )
-            temp_path = Path(
-                temp_file.name
-            )
-
         try:
             waveform, _ = librosa.load(
                 temp_path,
-                sr=SAMPLE_RATE,
+                sr=SR,
                 mono=True,
             )
 
         except Exception:
-            segment = AudioSegment.from_file(
-                temp_path
-            )
-
             segment = (
-                segment
+                AudioSegment.from_file(temp_path)
                 .set_channels(1)
-                .set_frame_rate(SAMPLE_RATE)
+                .set_frame_rate(SR)
             )
 
-            samples = np.array(
+            samples = np.asarray(
                 segment.get_array_of_samples(),
                 dtype=np.float32,
             )
 
-            if samples.size == 0:
-                return np.array(
-                    [],
-                    dtype=np.float32,
-                )
-
-            denominator = float(
-                1 << (
-                    8 * segment.sample_width - 1
-                )
+            scale = float(
+                1 << (8 * segment.sample_width - 1)
             )
 
-            waveform = (
-                samples
-                / max(
-                    denominator,
-                    1.0,
-                )
-            )
+            waveform = samples / max(scale, 1.0)
 
         return np.asarray(
             waveform,
@@ -1496,256 +227,79 @@ def decode_audio(
         )
 
     finally:
-        if (
-            temp_path is not None
-            and temp_path.exists()
-        ):
-            try:
-                temp_path.unlink()
-            except Exception:
-                pass
+        temp_path.unlink(missing_ok=True)
 
 
-def validate_audible_audio(
-    waveform: np.ndarray,
-) -> None:
-    """
-    Menolak audio kosong, terlalu pelan, atau hanya memiliki noise/
-    bunyi singkat.
-
-    Pemeriksaan ini menggunakan level absolut dBFS, sehingga berbeda
-    dari librosa.effects.split/trim yang bersifat relatif terhadap
-    bagian terkeras dari rekaman.
-    """
-    waveform = np.asarray(
-        waveform,
-        dtype=np.float32,
+def validate_audio(waveform: np.ndarray) -> None:
+    waveform = np.nan_to_num(
+        np.asarray(waveform, dtype=np.float32)
     )
 
     if waveform.size == 0:
-        raise SilentAudioError(
-            "Suara tidak terdengar."
-        )
+        raise SilentAudioError()
 
-    # Hilangkan NaN/Inf bila ada.
-    waveform = np.nan_to_num(
-        waveform,
-        nan=0.0,
-        posinf=0.0,
-        neginf=0.0,
+    peak = float(np.max(np.abs(waveform)))
+    rms = float(
+        np.sqrt(np.mean(waveform**2) + 1e-12)
     )
-
-    peak = float(
-        np.max(
-            np.abs(
-                waveform
-            )
-        )
-    )
-
-    if peak < SILENCE_PEAK_THRESHOLD:
-        raise SilentAudioError(
-            "Suara tidak terdengar."
-        )
-
-    # RMS seluruh rekaman.
-    global_rms = float(
-        np.sqrt(
-            np.mean(
-                np.square(
-                    waveform
-                )
-            )
-            + 1e-12
-        )
-    )
-
-    global_rms_dbfs = float(
-        20.0
-        * np.log10(
-            max(
-                global_rms,
-                1e-12,
-            )
-        )
-    )
+    rms_dbfs = 20 * np.log10(max(rms, 1e-12))
 
     if (
-        global_rms_dbfs
-        < SILENCE_RMS_DBFS_THRESHOLD
+        peak < SILENCE_PEAK
+        or rms_dbfs < SILENCE_RMS_DBFS
     ):
-        raise SilentAudioError(
-            "Suara tidak terdengar."
-        )
-
-    # --------------------------------------------------------
-    # FRAME-LEVEL ABSOLUTE ACTIVITY CHECK
-    # --------------------------------------------------------
-    frame_length = 2048
-    hop_length = 512
+        raise SilentAudioError()
 
     frame_rms = librosa.feature.rms(
         y=waveform,
-        frame_length=frame_length,
-        hop_length=hop_length,
-        center=True,
+        frame_length=2048,
+        hop_length=512,
     )[0]
 
-    frame_dbfs = (
-        20.0
-        * np.log10(
-            np.maximum(
-                frame_rms,
-                1e-12,
-            )
-        )
+    frame_dbfs = 20 * np.log10(
+        np.maximum(frame_rms, 1e-12)
     )
 
-    active_mask = (
-        frame_dbfs
-        >= ACTIVE_FRAME_DBFS_THRESHOLD
-    )
+    active = frame_dbfs >= ACTIVE_DBFS
+    active_frames = int(active.sum())
+    total_frames = max(len(active), 1)
 
-    active_frames = int(
-        np.sum(
-            active_mask
-        )
-    )
-
-    total_frames = max(
-        int(
-            frame_dbfs.size
-        ),
-        1,
-    )
-
-    active_duration = (
-        active_frames
-        * hop_length
-        / float(SAMPLE_RATE)
-    )
-
-    active_ratio = (
-        active_frames
-        / float(total_frames)
-    )
-
-    # Harus ada suara yang cukup lama.
-    if (
-        active_duration
-        < MIN_ACTIVE_DURATION_SECONDS
-    ):
-        raise SilentAudioError(
-            "Suara tidak terdengar."
-        )
-
-    # Untuk rekaman panjang, satu bunyi kecil sesaat tidak boleh
-    # dianggap sebagai bacaan valid.
-    if (
-        active_ratio
-        < MIN_ACTIVE_FRAME_RATIO
-    ):
-        raise SilentAudioError(
-            "Suara tidak terdengar."
-        )
-
-    # --------------------------------------------------------
-    # TRANSIENT / IMPULSE CHECK
-    # --------------------------------------------------------
-    # Bunyi klik/ketukan pendek bisa memiliki peak besar tetapi RMS
-    # sangat kecil. Peak-to-RMS yang ekstrem ditolak.
-    peak_to_rms = (
-        peak
-        / max(
-            global_rms,
-            1e-12,
-        )
-    )
+    active_sec = active_frames * 512 / SR
+    active_ratio = active_frames / total_frames
 
     if (
-        peak_to_rms > 35.0
-        and active_duration < 1.0
+        active_sec < MIN_ACTIVE_SEC
+        or active_ratio < MIN_ACTIVE_RATIO
     ):
-        raise SilentAudioError(
-            "Suara tidak terdengar."
-        )
+        raise SilentAudioError()
+
+    peak_to_rms = peak / max(rms, 1e-12)
+
+    if peak_to_rms > 35 and active_sec < 1.0:
+        raise SilentAudioError()
 
 
-def load_audio_trimmed(
-    waveform: np.ndarray,
+def preprocess_audio(
+    audio_bytes: bytes,
+    filename: str,
 ) -> np.ndarray:
-    """
-    Sesuai notebook:
-    waveform -> silence trimming top_db=30.
-    """
-    validate_audible_audio(
-        waveform
+    waveform = decode_audio(
+        audio_bytes,
+        filename,
     )
 
-    trimmed_audio, _ = librosa.effects.trim(
+    validate_audio(waveform)
+
+    waveform, _ = librosa.effects.trim(
         waveform,
-        top_db=SILENCE_TOP_DB,
+        top_db=TOP_DB,
     )
 
-    if trimmed_audio.size == 0:
-        raise SilentAudioError(
-            "Suara tidak terdengar."
-        )
+    validate_audio(waveform)
 
-    validate_audible_audio(
-        trimmed_audio
-    )
-
-    return trimmed_audio.astype(
-        np.float32
-    )
-
-
-def pad_or_crop_spectrogram(
-    logmel: np.ndarray,
-    max_frames: int = MAX_FRAMES,
-) -> np.ndarray:
-    n_frames = logmel.shape[1]
-
-    if n_frames > max_frames:
-        logmel = logmel[
-            :,
-            :max_frames,
-        ]
-
-    elif n_frames < max_frames:
-        right_padding = (
-            max_frames
-            - n_frames
-        )
-
-        pad_value = float(
-            logmel.min()
-        )
-
-        logmel = np.pad(
-            logmel,
-            (
-                (0, 0),
-                (0, right_padding),
-            ),
-            mode="constant",
-            constant_values=pad_value,
-        )
-
-    return logmel
-
-
-def extract_logmel(
-    waveform: np.ndarray,
-) -> np.ndarray:
-    """
-    Persis dengan notebook:
-    trimmed waveform -> full Log-Mel -> z-score -> crop/pad ke 501 frame.
-    """
-    mel_power = librosa.feature.melspectrogram(
+    mel = librosa.feature.melspectrogram(
         y=waveform,
-        sr=SAMPLE_RATE,
+        sr=SR,
         n_mels=N_MELS,
         n_fft=N_FFT,
         hop_length=HOP_LENGTH,
@@ -1753,97 +307,66 @@ def extract_logmel(
     )
 
     logmel = librosa.power_to_db(
-        mel_power,
+        mel,
         ref=np.max,
     )
 
-    mean = float(
-        logmel.mean()
-    )
-
-    std = float(
-        logmel.std()
-    )
-
     logmel = (
-        logmel - mean
+        logmel - logmel.mean()
     ) / (
-        std + 1e-8
+        logmel.std() + 1e-8
     )
 
-    logmel = pad_or_crop_spectrogram(
-        logmel
-    )
+    if logmel.shape[1] > MAX_FRAMES:
+        logmel = logmel[:, :MAX_FRAMES]
 
-    return logmel.astype(
+    elif logmel.shape[1] < MAX_FRAMES:
+        pad_width = MAX_FRAMES - logmel.shape[1]
+
+        logmel = np.pad(
+            logmel,
+            ((0, 0), (0, pad_width)),
+            mode="constant",
+            constant_values=float(logmel.min()),
+        )
+
+    return logmel[..., np.newaxis].astype(
         np.float32
-    )
-
-
-def audio_to_model_input(
-    waveform: np.ndarray,
-) -> np.ndarray:
-    logmel = extract_logmel(
-        waveform
-    )
-
-    return np.expand_dims(
-        logmel,
-        axis=-1,
     )
 
 
 # ============================================================
 # FEEDBACK
 # ============================================================
-@st.cache_data(
-    show_spinner=False
-)
-def load_feedback_texts() -> dict[int, list[str]]:
-    selected_path = None
+@st.cache_data(show_spinner=False)
+def load_feedback() -> dict[int, list[str]]:
+    path = next(
+        (p for p in METADATA_FILES if p.exists()),
+        None,
+    )
 
-    for candidate in METADATA_CANDIDATES:
-        if candidate.exists():
-            selected_path = candidate
-            break
-
-    if selected_path is None:
+    if path is None:
         return {
-            0: [
-                "Ghunnah sudah terdengar jelas."
-            ],
+            0: ["Ghunnah sudah terdengar jelas."],
             1: [
                 "Ghunnah perlu diperbaiki agar sesuai kaidah tajwid."
             ],
         }
 
-    df = pd.read_csv(
-        selected_path
-    )
+    df = pd.read_csv(path)
 
-    required = {
-        "label",
-        "error_explanation",
-    }
+    required = {"label", "error_explanation"}
 
-    if not required.issubset(
-        set(df.columns)
-    ):
+    if not required.issubset(df.columns):
         raise ValueError(
-            f"{selected_path.name} harus memiliki kolom "
+            "Metadata harus memiliki kolom "
             "`label` dan `error_explanation`."
         )
 
-    result = {
-        0: [],
-        1: [],
-    }
+    feedback = {0: [], 1: []}
 
-    for label in (
-        0,
-        1,
-    ):
-        texts = (
+    for label in (0, 1):
+        feedback[label] = (
             df.loc[
                 df["label"].astype(int) == label,
                 "error_explanation",
@@ -1851,130 +374,41 @@ def load_feedback_texts() -> dict[int, list[str]]:
             .dropna()
             .astype(str)
             .str.strip()
+            .tolist()
         )
 
-        result[label] = [
-            text
-            for text in texts.tolist()
-            if text
-        ]
-
-    return result
+    return feedback
 
 
-def choose_base_feedback(
-    feedback_texts: dict[int, list[str]],
-    predicted_label: int,
-) -> str:
-    choices = feedback_texts.get(
-        int(predicted_label),
-        [],
-    )
+def one_sentence(text: str) -> str:
+    text = " ".join(str(text).split()).strip()
 
-    if not choices:
-        return (
-            "Ghunnah sudah terdengar jelas."
-            if int(predicted_label) == 0
-            else "Ghunnah perlu diperbaiki agar sesuai kaidah tajwid."
-        )
-
-    return random.choice(
-        choices
-    )
-
-
-def keep_one_sentence(
-    text: str,
-) -> str:
-    normalized = " ".join(
-        str(text).strip().split()
-    )
-
-    if not normalized:
+    if not text:
         return ""
 
-    import re
+    for symbol in ".!?":
+        index = text.find(symbol)
 
-    match = re.match(
-        r"^(.+?[.!?])(?:\s|$)",
-        normalized,
-    )
+        if index >= 0:
+            return text[: index + 1]
 
-    if match:
-        return match.group(1).strip()
-
-    return (
-        normalized.rstrip(
-            ".!?"
-        )
-        + "."
-    )
+    return text.rstrip(".!?") + "."
 
 
-def build_prompt_messages(
-    status: str,
-    info_text: str,
-):
-    """
-    Mengikuti aturan prompt pada notebook (13):
-    satu kalimat, formal/natural, tidak menambah informasi baru.
-    """
-    status = str(
-        status
-    ).upper().strip()
-
-    info_text = " ".join(
-        str(info_text).strip().split()
-    )
-
-    if status == "SALAH":
-        system_message = (
-            "Anda adalah guru ngaji profesional. "
-            "Buat tepat satu kalimat umpan balik dalam Bahasa Indonesia "
-            "yang formal, natural, santun, dan memotivasi. "
-            "Jangan menambah informasi baru, jangan mengubah inti makna "
-            "kalimat dasar, dan jangan menambahkan jenis kesalahan yang "
-            "tidak disebutkan. Fokus pada perbaikan bacaan ghunnah. "
-            "Keluarkan hanya satu kalimat akhir tanpa judul."
-        )
-
-    else:
-        system_message = (
-            "Anda adalah guru ngaji profesional. "
-            "Buat tepat satu kalimat apresiasi dalam Bahasa Indonesia "
-            "yang formal, natural, santun, dan memotivasi. "
-            "Jangan menambah informasi baru dan jangan mengubah inti "
-            "makna kalimat dasar. Fokus pada apresiasi bacaan ghunnah "
-            "dan hindari pujian berlebihan. "
-            "Keluarkan hanya satu kalimat akhir tanpa judul."
-        )
-
-    user_message = (
-        f"Kalimat dasar:\n{info_text}\n\n"
-        "Susun ulang kalimat tersebut tanpa mengubah inti maknanya."
-    )
-
-    return [
-        {
-            "role": "system",
-            "content": system_message,
-        },
-        {
-            "role": "user",
-            "content": user_message,
-        },
-    ]
-
-
-def generate_qwen_feedback(
+def generate_feedback(
     status: str,
     base_feedback: str,
-) -> tuple[str, str]:
+) -> str:
     if not HF_TOKEN:
-        return (
-            base_feedback,
-            "metadata",
-        )
+        return base_feedback
+
+    system_prompt = (
+        "Anda adalah guru ngaji profesional. "
+        "Buat tepat satu kalimat Bahasa Indonesia yang formal, natural, "
+        "santun, dan memotivasi. Jangan menambah informasi baru atau "
+        "mengubah inti kalimat dasar. Fokus pada bacaan ghunnah. "
+        "Keluarkan hanya satu kalimat."
+    )
 
     try:
         client = InferenceClient(
@@ -1984,265 +418,134 @@ def generate_qwen_feedback(
         )
 
         result = client.chat_completion(
-            model=SLM_MODEL_ID,
-            messages=build_prompt_messages(
-                status,
-                base_feedback,
-            ),
-            max_tokens=SLM_MAX_NEW_TOKENS,
-            temperature=SLM_TEMPERATURE,
+            model=QWEN_ID,
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Status: {status}\n"
+                        f"Kalimat dasar: {base_feedback}"
+                    ),
+                },
+            ],
+            max_tokens=80,
+            temperature=0.4,
         )
 
-        text = ""
-
-        if result.choices:
-            text = (
-                result.choices[0]
-                .message
-                .content
-                or ""
-            )
-
-        text = keep_one_sentence(
-            text
+        generated = (
+            result.choices[0].message.content
+            if result.choices
+            else ""
         )
 
-        if text:
-            return (
-                text,
-                SLM_MODEL_NAME,
-            )
+        return one_sentence(generated) or base_feedback
 
     except Exception:
-        pass
-
-    return (
-        base_feedback,
-        "metadata",
-    )
+        return base_feedback
 
 
 # ============================================================
 # INFERENCE
 # ============================================================
-def predict_audio(
-    model,
+def predict(
+    model: tf.keras.Model,
     audio_bytes: bytes,
     filename: str,
-):
-    waveform = decode_audio(
+) -> tuple[int, str]:
+    x = preprocess_audio(
         audio_bytes,
         filename,
     )
 
-    waveform = load_audio_trimmed(
-        waveform
-    )
-
-    # --------------------------------------------------------
-    # FILTER JENIS AUDIO SEBELUM CNN
-    # --------------------------------------------------------
-    # Musik, hewan, dan input non-suara-manusia yang jelas
-    # dihentikan di sini sehingga tidak dipaksa menjadi BENAR/SALAH.
-    audio_type_info = (
-        validate_ghunnah_audio_type(
-            waveform
+    probability_wrong = float(
+        model(
+            np.expand_dims(x, axis=0),
+            training=False,
         )
-    )
-
-    x = audio_to_model_input(
-        waveform
-    )
-
-    x_batch = np.expand_dims(
-        x,
-        axis=0,
+        .numpy()
+        .reshape(-1)[0]
     )
 
     probability_wrong = float(
-        np.asarray(
-            model(
-                x_batch,
-                training=False,
-            )
-        ).reshape(-1)[0]
+        np.clip(probability_wrong, 0.0, 1.0)
     )
 
-    probability_wrong = float(
-        np.clip(
-            probability_wrong,
-            0.0,
-            1.0,
-        )
-    )
+    probability_correct = 1.0 - probability_wrong
 
-    probability_correct = float(
-        1.0 - probability_wrong
-    )
-
-    # ========================================================
-    # ATURAN KEPUTUSAN APLIKASI
-    # ========================================================
-    # Gunakan SATU threshold saja, yaitu P(BENAR).
-    #
-    # P(BENAR) >= 0.50 -> BENAR
-    # P(BENAR) <  0.50 -> SALAH
-    #
-    # Karena output sigmoid CNN adalah P(SALAH),
-    # P(BENAR) = 1 - P(SALAH).
-    predicted_label = (
+    label = (
         0
-        if probability_correct
-        >= MIN_BENAR_PROBABILITY
+        if probability_correct >= MIN_BENAR
         else 1
     )
 
-    status = (
-        "BENAR"
-        if predicted_label == 0
-        else "SALAH"
-    )
+    status = "BENAR" if label == 0 else "SALAH"
 
-    return {
-        "predicted_label": predicted_label,
-        "status": status,
-        "probability_correct": probability_correct,
-        "probability_wrong": probability_wrong,
-        "audio_type_info": audio_type_info,
-    }
-
-
-def render_result(
-    prediction: dict,
-    feedback_texts: dict[int, list[str]],
-):
-    predicted_label = int(
-        prediction["predicted_label"]
-    )
-
-    status = prediction["status"]
-
-    # Label BENAR/SALAH dan probabilitas tidak ditampilkan.
-    # Hasil prediksi CNN langsung digunakan untuk memilih feedback.
-    base_feedback = choose_base_feedback(
-        feedback_texts,
-        predicted_label,
-    )
-
-    with st.spinner(
-        "Menyusun umpan balik..."
-    ):
-        feedback, source = generate_qwen_feedback(
-            status,
-            base_feedback,
-        )
-
-    st.subheader(
-        "Umpan balik"
-    )
-
-    st.markdown(
-        f"""
-        <div class="feedback-card">
-            {html.escape(feedback)}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    if (
-        source == "metadata"
-        and not HF_TOKEN
-    ):
-        st.caption(
-            "Qwen belum aktif karena HF_TOKEN belum diisi; "
-            "feedback dasar tetap ditampilkan."
-        )
-
-
-    # Ditampilkan untuk pengujian agar false-positive dapat dikalibrasi
-    # berdasarkan skor sebenarnya, bukan menebak threshold.
-    audio_type_info = prediction.get(
-        "audio_type_info",
-        {}
-    )
-
-    if audio_type_info:
-        with st.expander(
-            "Detail filter audio"
-        ):
-            st.json(
-                audio_type_info
-            )
+    return label, status
 
 
 def run_analysis(
-    model,
-    feedback_texts,
+    model: tf.keras.Model,
+    feedbacks: dict[int, list[str]],
     audio_bytes: bytes,
     filename: str,
-):
+) -> None:
     try:
-        prediction = predict_audio(
+        label, status = predict(
             model,
             audio_bytes,
             filename,
         )
 
+        options = feedbacks.get(label) or [
+            (
+                "Ghunnah sudah terdengar jelas."
+                if label == 0
+                else "Ghunnah perlu diperbaiki agar sesuai kaidah tajwid."
+            )
+        ]
+
+        base_feedback = random.choice(options)
+
+        with st.spinner("Menyusun umpan balik..."):
+            feedback = generate_feedback(
+                status,
+                base_feedback,
+            )
+
+        st.subheader("Umpan balik")
+
+        st.markdown(
+            f"""
+            <div class="feedback-card">
+                {html.escape(feedback)}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
     except SilentAudioError:
-        st.warning(
-            "Suara bacaan tidak terdengar dengan cukup jelas."
-        )
-        st.caption(
-            "Bisikan, noise ringan, atau audio tanpa dengung/voicing yang cukup "
-            "tidak akan diteruskan ke CNN."
-        )
-        return
-
-    except InvalidGhunnahAudioError as error:
-        st.warning(
-            "Audio bukan input bacaan ghunnah."
-        )
-
-        st.info(
-            str(error)
-        )
-
-        # Detail disembunyikan agar UI utama tetap sederhana.
-        # Berguna saat pengujian/skripsi untuk melihat keputusan YAMNet.
-        if error.details:
-            with st.expander(
-                "Detail filter audio"
-            ):
-                st.json(
-                    error.details
-                )
-
-        return
+        st.warning("Suara tidak terdengar.")
 
     except Exception as error:
         st.error(
-            "Audio tidak dapat dianalisis. "
-            f"Detail: {error}"
+            f"Audio tidak dapat dianalisis. Detail: {error}"
         )
-        return
-
-    render_result(
-        prediction,
-        feedback_texts,
-    )
 
 
 # ============================================================
-# UI
+# APLIKASI
 # ============================================================
 st.markdown(
     """
     <div class="hero">
         <h1>🎙️ Ghunnah</h1>
         <p>
-            Analisis bacaan ghunnah menggunakan CNN dan pemberian
-            umpan balik menggunakan Qwen2.5-1.5B.
+            Analisis bacaan ghunnah menggunakan CNN dan
+            umpan balik Qwen2.5-1.5B.
         </p>
     </div>
     """,
@@ -2252,145 +555,77 @@ st.markdown(
 model_path = find_model_path()
 
 if model_path is None:
-    st.error(
-        "Best model belum ditemukan. Tambahkan salah satu file berikut "
-        "ke root repository: `best_cnn.h5`, `best_cnn.keras`, "
-        "atau `best_cnn.weights.h5`."
-    )
+    st.error("Model CNN belum ditemukan.")
     st.stop()
 
 try:
-    cnn_model = load_best_cnn(
-        str(model_path)
-    )
-except Exception as error:
-    st.error(
-        "Best model gagal dimuat. Pastikan model berasal dari "
-        "arsitektur notebook (13). "
-        f"Detail: {error}"
-    )
-    st.stop()
+    cnn_model = load_model(str(model_path))
+    feedback_data = load_feedback()
 
-try:
-    feedback_texts = load_feedback_texts()
 except Exception as error:
-    st.error(
-        f"File metadata feedback tidak valid: {error}"
-    )
+    st.error(str(error))
     st.stop()
 
 
 upload_tab, record_tab = st.tabs(
-    [
-        "📁 Upload audio",
-        "🎤 Rekam suara",
-    ]
+    ["📁 Upload audio", "🎤 Rekam suara"]
 )
 
 
 with upload_tab:
-    st.subheader(
-        "Upload audio"
-    )
-
-    st.caption(
-        "Format audio: WAV, MP3, M4A, AAC, FLAC, OGG, OPUS, dan WEBM. "
-        "Rekaman video/kamera tidak digunakan sebagai input bacaan."
-    )
-
-    uploaded_audio = st.file_uploader(
+    uploaded = st.file_uploader(
         "Pilih file audio",
-        type=[
-            "wav",
-            "mp3",
-            "m4a",
-            "aac",
-            "flac",
-            "ogg",
-            "opus",
-            "webm",
-        ],
-        accept_multiple_files=False,
-        key="uploaded_audio",
-        help=(
-            "Gunakan file audio. Video dari kamera tidak diproses "
-            "sebagai input bacaan."
-        ),
+        type=None,
     )
 
-    if uploaded_audio is not None:
-        audio_bytes = (
-            uploaded_audio.getvalue()
-        )
+    if uploaded:
+        audio_bytes = uploaded.getvalue()
 
-        st.audio(
-            audio_bytes
-        )
+        st.audio(audio_bytes)
 
         if st.button(
             "Analisis file audio",
             type="primary",
             use_container_width=True,
-            key="analyze_upload",
         ):
             run_analysis(
                 cnn_model,
-                feedback_texts,
+                feedback_data,
                 audio_bytes,
-                uploaded_audio.name,
+                uploaded.name,
             )
 
 
 with record_tab:
-    st.subheader(
-        "Rekam suara"
+    recorded = st.audio_input(
+        "Rekam bacaan ghunnah"
     )
 
-    if not hasattr(
-        st,
-        "audio_input",
-    ):
-        st.error(
-            "Versi Streamlit ini belum mendukung perekaman mikrofon."
-        )
-    else:
-        recorded_audio = st.audio_input(
-            "Rekam bacaan ghunnah",
-            key="recorded_audio",
-        )
+    if recorded:
+        audio_bytes = recorded.getvalue()
 
-        if recorded_audio is not None:
-            recorded_bytes = (
-                recorded_audio.getvalue()
-            )
+        st.audio(audio_bytes)
 
-            st.audio(
-                recorded_bytes
-            )
-
-            if st.button(
-                "Analisis rekaman suara",
-                type="primary",
-                use_container_width=True,
-                key="analyze_recording",
-            ):
-                filename = getattr(
-                    recorded_audio,
+        if st.button(
+            "Analisis rekaman",
+            type="primary",
+            use_container_width=True,
+        ):
+            run_analysis(
+                cnn_model,
+                feedback_data,
+                audio_bytes,
+                getattr(
+                    recorded,
                     "name",
-                    "rekaman_ghunnah.wav",
-                )
-
-                run_analysis(
-                    cnn_model,
-                    feedback_texts,
-                    recorded_bytes,
-                    filename,
-                )
+                    "rekaman.wav",
+                ),
+            )
 
 
 st.divider()
 
 st.caption(
-    "CNN menentukan hasil bacaan. Qwen hanya menyusun ulang "
-    "kalimat feedback dan tidak mengubah keputusan CNN."
+    "CNN menentukan hasil bacaan. "
+    "Qwen hanya menyusun ulang feedback dan tidak mengubah keputusan CNN."
 )
