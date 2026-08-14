@@ -13,6 +13,7 @@ import pandas as pd
 import streamlit as st
 import tensorflow as tf
 import tensorflow_hub as hub
+import webrtcvad
 from huggingface_hub import InferenceClient
 from pydub import AudioSegment
 
@@ -74,6 +75,15 @@ MIN_HUMAN_VOICE_SCORE = 0.035
 ANIMAL_REJECT_SCORE = 0.28
 MUSIC_REJECT_SCORE = 0.45
 NONVOICE_MARGIN = 0.15
+
+
+# WebRTC VAD: lapisan tambahan untuk memastikan ada pola speech/voice.
+# Mode 2 = cukup agresif, tetapi masih lebih ramah terhadap bacaan
+# dibanding mode 3.
+WEBRTC_VAD_MODE = 2
+WEBRTC_FRAME_MS = 30
+MIN_VAD_SPEECH_RATIO = 0.12
+MIN_VAD_SPEECH_SECONDS = 0.30
 
 # Kategori manusia dibuat lebih presisi.
 # Jangan memakai kata "vocal" karena bisa mencocokkan "animal vocalization".
@@ -476,18 +486,143 @@ def keyword_class_score(
     )
 
 
+def get_webrtc_vad_metrics(
+    waveform: np.ndarray,
+) -> dict:
+    """
+    Hitung proporsi frame yang dianggap speech oleh WebRTC VAD.
+
+    Input:
+    - mono
+    - 16 kHz
+    - float32 [-1, 1]
+
+    WebRTC VAD membutuhkan PCM 16-bit dengan frame 10/20/30 ms.
+    """
+    waveform = np.asarray(
+        waveform,
+        dtype=np.float32,
+    )
+
+    if waveform.size == 0:
+        return {
+            "vad_speech_ratio": 0.0,
+            "vad_speech_seconds": 0.0,
+            "vad_total_frames": 0,
+            "vad_speech_frames": 0,
+        }
+
+    waveform = np.nan_to_num(
+        waveform,
+        nan=0.0,
+        posinf=0.0,
+        neginf=0.0,
+    )
+
+    waveform = np.clip(
+        waveform,
+        -1.0,
+        1.0,
+    )
+
+    pcm16 = (
+        waveform
+        * 32767.0
+    ).astype(
+        np.int16
+    )
+
+    frame_samples = int(
+        SAMPLE_RATE
+        * WEBRTC_FRAME_MS
+        / 1000
+    )
+
+    total_frames = (
+        len(pcm16)
+        // frame_samples
+    )
+
+    if total_frames <= 0:
+        return {
+            "vad_speech_ratio": 0.0,
+            "vad_speech_seconds": 0.0,
+            "vad_total_frames": 0,
+            "vad_speech_frames": 0,
+        }
+
+    vad = webrtcvad.Vad(
+        WEBRTC_VAD_MODE
+    )
+
+    speech_frames = 0
+
+    for frame_index in range(
+        total_frames
+    ):
+        start = (
+            frame_index
+            * frame_samples
+        )
+
+        end = (
+            start
+            + frame_samples
+        )
+
+        frame = pcm16[
+            start:end
+        ].tobytes()
+
+        try:
+            is_speech = vad.is_speech(
+                frame,
+                SAMPLE_RATE,
+            )
+        except Exception:
+            is_speech = False
+
+        if is_speech:
+            speech_frames += 1
+
+    speech_ratio = (
+        speech_frames
+        / float(
+            total_frames
+        )
+    )
+
+    speech_seconds = (
+        speech_frames
+        * WEBRTC_FRAME_MS
+        / 1000.0
+    )
+
+    return {
+        "vad_speech_ratio": float(
+            speech_ratio
+        ),
+        "vad_speech_seconds": float(
+            speech_seconds
+        ),
+        "vad_total_frames": int(
+            total_frames
+        ),
+        "vad_speech_frames": int(
+            speech_frames
+        ),
+    }
+
+
 def validate_ghunnah_audio_type(
     waveform: np.ndarray,
 ) -> dict:
     """
-    Filter OOD sebelum CNN.
+    Filter OOD dua lapis:
+    1. WebRTC VAD -> apakah ada pola speech/voice?
+    2. YAMNet -> apakah dominan musik/hewan/non-bacaan?
 
-    Prinsip:
-    - speech/chant/mantra/humming -> indikasi bacaan manusia;
-    - animal -> ditolak bila dominan;
-    - music/instrument -> ditolak bila dominan;
-    - singing TIDAK otomatis dianggap bacaan, karena musik vokal
-      juga dapat menghasilkan skor singing tinggi.
+    CNN ghunnah hanya dijalankan jika input lolos dua pemeriksaan.
     """
     waveform = np.asarray(
         waveform,
@@ -499,6 +634,30 @@ def validate_ghunnah_audio_type(
             "Suara tidak terdengar."
         )
 
+    # --------------------------------------------------------
+    # LAPIS 1: WEBRTC VAD
+    # --------------------------------------------------------
+    vad_metrics = (
+        get_webrtc_vad_metrics(
+            waveform
+        )
+    )
+
+    vad_speech_ratio = float(
+        vad_metrics[
+            "vad_speech_ratio"
+        ]
+    )
+
+    vad_speech_seconds = float(
+        vad_metrics[
+            "vad_speech_seconds"
+        ]
+    )
+
+    # --------------------------------------------------------
+    # LAPIS 2: YAMNET
+    # --------------------------------------------------------
     max_samples = int(
         SAMPLE_RATE
         * YAMNET_CHECK_SECONDS
@@ -508,7 +667,9 @@ def validate_ghunnah_audio_type(
         :max_samples
     ]
 
-    yamnet_model, class_names = load_yamnet()
+    yamnet_model, class_names = (
+        load_yamnet()
+    )
 
     scores, _, _ = yamnet_model(
         tf.convert_to_tensor(
@@ -523,174 +684,217 @@ def validate_ghunnah_audio_type(
     )
 
     if scores.size == 0:
-        return {
-            "passed": True,
-            "top_label": "unknown",
-            "top_score": 0.0,
-            "speech_score": 0.0,
-            "recitation_score": 0.0,
-            "singing_score": 0.0,
-            "animal_score": 0.0,
-            "music_score": 0.0,
-        }
+        raise InvalidGhunnahAudioError(
+            "Jenis audio tidak dapat divalidasi. Silakan rekam ulang.",
+            vad_metrics,
+        )
 
-    # Rata-rata untuk kelas musik/hewan agar stabil.
     mean_scores = np.mean(
         scores,
         axis=0,
     )
 
-    # Persentil tinggi untuk mendeteksi keberadaan speech/chant
-    # meskipun hanya muncul pada sebagian frame.
     presence_scores = np.percentile(
         scores,
         90,
         axis=0,
     )
 
-    top_index = int(
-        np.argmax(
-            mean_scores
-        )
-    )
+    top_indices = np.argsort(
+        mean_scores
+    )[::-1][:5]
 
-    top_label = str(
-        class_names[
-            top_index
-        ]
+    top5 = [
+        {
+            "label": str(
+                class_names[
+                    int(index)
+                ]
+            ),
+            "score": float(
+                mean_scores[
+                    int(index)
+                ]
+            ),
+        }
+        for index in top_indices
+    ]
+
+    top_label = (
+        top5[0]["label"]
     )
 
     top_score = float(
-        mean_scores[
-            top_index
-        ]
+        top5[0]["score"]
     )
 
-    speech_score = keyword_class_score(
-        class_names,
-        presence_scores,
-        SPEECH_KEYWORDS,
+    speech_score = (
+        keyword_class_score(
+            class_names,
+            presence_scores,
+            SPEECH_KEYWORDS,
+        )
     )
 
-    recitation_score = keyword_class_score(
-        class_names,
-        presence_scores,
-        RECITATION_KEYWORDS,
+    recitation_score = (
+        keyword_class_score(
+            class_names,
+            presence_scores,
+            RECITATION_KEYWORDS,
+        )
     )
 
-    singing_score = keyword_class_score(
-        class_names,
-        presence_scores,
-        SINGING_KEYWORDS,
+    singing_score = (
+        keyword_class_score(
+            class_names,
+            presence_scores,
+            SINGING_KEYWORDS,
+        )
     )
 
-    animal_score = keyword_class_score(
-        class_names,
-        mean_scores,
-        ANIMAL_KEYWORDS,
+    animal_score = (
+        keyword_class_score(
+            class_names,
+            mean_scores,
+            ANIMAL_KEYWORDS,
+        )
     )
 
-    music_score = keyword_class_score(
-        class_names,
-        mean_scores,
-        MUSIC_KEYWORDS,
+    music_score = (
+        keyword_class_score(
+            class_names,
+            mean_scores,
+            MUSIC_KEYWORDS,
+        )
     )
 
-    # Indikasi bacaan yang kita percaya:
-    # speech atau chant/mantra/humming.
     trusted_human_score = max(
         speech_score,
         recitation_score,
     )
 
     details = {
+        **vad_metrics,
         "passed": True,
         "top_label": top_label,
         "top_score": top_score,
-        "speech_score": speech_score,
-        "recitation_score": recitation_score,
-        "singing_score": singing_score,
-        "trusted_human_score": trusted_human_score,
-        "animal_score": animal_score,
-        "music_score": music_score,
+        "top5": top5,
+        "speech_score": float(
+            speech_score
+        ),
+        "recitation_score": float(
+            recitation_score
+        ),
+        "singing_score": float(
+            singing_score
+        ),
+        "trusted_human_score": float(
+            trusted_human_score
+        ),
+        "animal_score": float(
+            animal_score
+        ),
+        "music_score": float(
+            music_score
+        ),
     }
 
-    # --------------------------------------------------------
-    # 1) HEWAN
-    # --------------------------------------------------------
-    # Lebih tegas dari versi sebelumnya.
-    if (
-        animal_score >= 0.18
-        and animal_score
-        >= trusted_human_score + 0.05
-    ):
-        details["passed"] = False
+    lowered_top = (
+        top_label
+        .lower()
+    )
 
-        raise InvalidGhunnahAudioError(
-            "Audio terdeteksi sebagai suara hewan atau bukan bacaan manusia. "
-            "Silakan gunakan rekaman bacaan ghunnah.",
-            details,
-        )
-
-    # Jika label teratas secara eksplisit berhubungan dengan hewan,
-    # tolak walaupun skornya tidak terlalu tinggi.
-    lowered_top = top_label.lower()
-
-    if any(
+    top_is_animal = any(
         keyword in lowered_top
         for keyword in ANIMAL_KEYWORDS
-    ) and trusted_human_score < 0.12:
-        details["passed"] = False
+    )
 
-        raise InvalidGhunnahAudioError(
-            "Audio terdeteksi sebagai suara hewan atau bukan bacaan manusia. "
-            "Silakan gunakan rekaman bacaan ghunnah.",
-            details,
-        )
-
-    # --------------------------------------------------------
-    # 2) MUSIK
-    # --------------------------------------------------------
-    # Singing sendiri tidak cukup untuk meloloskan input.
-    # Musik dengan vokal tetap ditolak jika skor music dominan
-    # dan speech/chant/mantra tidak cukup kuat.
-    if (
-        music_score >= 0.20
-        and trusted_human_score < 0.15
-    ):
-        details["passed"] = False
-
-        raise InvalidGhunnahAudioError(
-            "Audio terdeteksi sebagai musik atau suara non-bacaan. "
-            "Silakan gunakan rekaman bacaan ghunnah.",
-            details,
-        )
-
-    if any(
+    top_is_music = any(
         keyword in lowered_top
         for keyword in MUSIC_KEYWORDS
-    ) and trusted_human_score < 0.15:
-        details["passed"] = False
+    )
 
-        raise InvalidGhunnahAudioError(
-            "Audio terdeteksi sebagai musik atau suara non-bacaan. "
-            "Silakan gunakan rekaman bacaan ghunnah.",
-            details,
+    # --------------------------------------------------------
+    # A. HEWAN: TOLAK TEGAS
+    # --------------------------------------------------------
+    # Suara hewan tidak boleh lolos hanya karena VAD salah
+    # membaca beberapa frame sebagai voice.
+    if (
+        top_is_animal
+        or animal_score >= 0.12
+    ):
+        # Pengecualian hanya jika indikasi bacaan manusia
+        # jauh lebih kuat daripada indikasi hewan.
+        if not (
+            trusted_human_score >= 0.25
+            and trusted_human_score
+            >= animal_score * 2.0
+            and vad_speech_ratio >= 0.20
+        ):
+            details["passed"] = False
+
+            raise InvalidGhunnahAudioError(
+                "Audio terdeteksi sebagai suara hewan atau bukan bacaan manusia. "
+                "Silakan gunakan rekaman bacaan ghunnah.",
+                details,
+            )
+
+    # --------------------------------------------------------
+    # B. MUSIK: TOLAK TEGAS
+    # --------------------------------------------------------
+    # Singing tidak dijadikan bukti bacaan.
+    # Lagu/vokal musik tetap harus ditolak.
+    if (
+        top_is_music
+        or music_score >= 0.15
+    ):
+        # Bacaan hanya diberi pengecualian jika ada bukti kuat
+        # speech/chant/mantra DAN VAD juga mendeteksi voice.
+        strong_recitation = (
+            trusted_human_score >= 0.22
+            and vad_speech_ratio >= 0.20
+            and trusted_human_score
+            >= music_score * 1.25
         )
 
+        if not strong_recitation:
+            details["passed"] = False
+
+            raise InvalidGhunnahAudioError(
+                "Audio terdeteksi sebagai musik atau suara non-bacaan. "
+                "Silakan gunakan rekaman bacaan ghunnah.",
+                details,
+            )
+
     # --------------------------------------------------------
-    # 3) HARUS ADA INDIKASI SUARA MANUSIA/BACAAN
+    # C. HARUS ADA SPEECH/VOICE YANG CUKUP
     # --------------------------------------------------------
-    # Singing murni tidak dijadikan bukti utama agar lagu tidak lolos.
+    # Ini membuat suara lingkungan/hewan yang lolos dari YAMNet
+    # tidak langsung masuk CNN.
     if (
-        trusted_human_score < 0.025
-        and top_score >= 0.20
+        vad_speech_ratio
+        < MIN_VAD_SPEECH_RATIO
+        or vad_speech_seconds
+        < MIN_VAD_SPEECH_SECONDS
     ):
         details["passed"] = False
 
         raise InvalidGhunnahAudioError(
-            "Tidak terdeteksi suara bacaan manusia yang cukup untuk "
-            "dianalisis sebagai ghunnah.",
+            "Tidak terdeteksi pola suara manusia yang cukup untuk "
+            "dianalisis sebagai bacaan ghunnah.",
+            details,
+        )
+
+    # --------------------------------------------------------
+    # D. HARUS ADA INDIKASI BACAAN MANUSIA
+    # --------------------------------------------------------
+    # Singing saja tidak cukup agar lagu tidak lolos.
+    if trusted_human_score < 0.035:
+        details["passed"] = False
+
+        raise InvalidGhunnahAudioError(
+            "Audio belum dikenali sebagai suara bacaan manusia yang cukup. "
+            "Silakan gunakan rekaman bacaan ghunnah yang lebih jelas.",
             details,
         )
 
@@ -1460,6 +1664,22 @@ def render_result(
             "Qwen belum aktif karena HF_TOKEN belum diisi; "
             "feedback dasar tetap ditampilkan."
         )
+
+
+    # Ditampilkan untuk pengujian agar false-positive dapat dikalibrasi
+    # berdasarkan skor sebenarnya, bukan menebak threshold.
+    audio_type_info = prediction.get(
+        "audio_type_info",
+        {}
+    )
+
+    if audio_type_info:
+        with st.expander(
+            "Detail filter audio"
+        ):
+            st.json(
+                audio_type_info
+            )
 
 
 def run_analysis(
