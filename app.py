@@ -14,7 +14,10 @@ import tensorflow as tf
 from huggingface_hub import InferenceClient
 from pydub import AudioSegment
 
+
+# ============================================================
 # KONFIGURASI
+# ============================================================
 APP_DIR = Path(__file__).resolve().parent
 
 SR = 16_000
@@ -499,13 +502,17 @@ st.markdown(
     """
     <div class="hero">
         <h1>🎙️ Ghunnah</h1>
+        <p>
+            Analisis ketepatan bacaan ghunnah menggunakan CNN
+            dengan umpan balik berbantuan Qwen2.5-1.5B.
+        </p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 st.info(
-    "Silahakn upload atau masukkan rekaman bacaan Surah Maryam ayat 4, 5, 7, atau 8 "
+    "Masukkan rekaman bacaan Surah Maryam ayat 4, 5, 7, atau 8 "
     "yang menjadi ruang lingkup sistem."
 )
 
@@ -530,7 +537,7 @@ upload_tab, record_tab = st.tabs(
 with upload_tab:
     uploaded = st.file_uploader(
         "Pilih file audio",
-        type=["wav", "mp3", "m4a", "ogg", "mp4""flac"],
+        type=["wav", "mp3", "m4a", "mp4", "ogg", "flac"],
     )
 
     if uploaded is not None:
