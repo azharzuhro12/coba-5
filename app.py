@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import tensorflow as tf
+import tensorflow_hub as hub
 from huggingface_hub import InferenceClient
 from pydub import AudioSegment
 
@@ -56,6 +57,84 @@ MIN_ACTIVE_FRAME_RATIO = 0.025
 # Pengaman tambahan agar hasil yang meragukan tidak langsung disebut BENAR.
 # Ini adalah rejection rule di level aplikasi, bukan threshold training CNN.
 MIN_BENAR_PROBABILITY = 0.50
+
+
+# ============================================================
+# FILTER JENIS AUDIO / OUT-OF-DISTRIBUTION (OOD)
+# ============================================================
+# YAMNet hanya menjadi gerbang sebelum CNN.
+# CNN skripsi, preprocessing, dan keputusan BENAR/SALAH tidak diubah.
+YAMNET_HANDLE = "https://tfhub.dev/google/yamnet/1"
+
+# Maksimal audio yang diperiksa YAMNet agar tetap ringan.
+YAMNET_CHECK_SECONDS = 10.0
+
+# Ambang dibuat konservatif supaya tilawah/chant tidak mudah ditolak.
+MIN_HUMAN_VOICE_SCORE = 0.06
+ANIMAL_REJECT_SCORE = 0.22
+MUSIC_REJECT_SCORE = 0.35
+NONVOICE_MARGIN = 0.10
+
+HUMAN_VOICE_KEYWORDS = (
+    "speech",
+    "speaking",
+    "conversation",
+    "narration",
+    "whisper",
+    "singing",
+    "chant",
+    "mantra",
+    "humming",
+    "vocal",
+)
+
+ANIMAL_KEYWORDS = (
+    "animal",
+    "dog",
+    "cat",
+    "bird",
+    "bark",
+    "meow",
+    "roar",
+    "growl",
+    "insect",
+    "cricket",
+    "frog",
+    "horse",
+    "cow",
+    "cattle",
+    "pig",
+    "sheep",
+    "goat",
+    "chicken",
+    "duck",
+    "goose",
+)
+
+MUSIC_KEYWORDS = (
+    "music",
+    "musical instrument",
+    "guitar",
+    "piano",
+    "keyboard",
+    "drum",
+    "percussion",
+    "violin",
+    "viola",
+    "cello",
+    "flute",
+    "saxophone",
+    "trumpet",
+    "orchestra",
+    "rock",
+    "pop music",
+    "hip hop",
+    "jazz",
+    "classical music",
+    "electronic music",
+    "techno",
+    "disco",
+)
 
 MODEL_CANDIDATES = [
     APP_DIR / "best_cnn.h5",
@@ -307,10 +386,297 @@ def load_best_cnn(
 
 
 # ============================================================
+# MODEL FILTER AUDIO (YAMNet)
+# ============================================================
+@st.cache_resource(
+    show_spinner="Memuat filter jenis audio..."
+)
+def load_yamnet():
+    """
+    YAMNet mengenali kelas audio umum (speech, musik, hewan, dll).
+    Dipakai hanya untuk menolak input yang jelas bukan suara bacaan.
+    """
+    model = hub.load(
+        YAMNET_HANDLE
+    )
+
+    class_map_path = (
+        model
+        .class_map_path()
+        .numpy()
+    )
+
+    if isinstance(
+        class_map_path,
+        bytes,
+    ):
+        class_map_path = (
+            class_map_path.decode(
+                "utf-8"
+            )
+        )
+
+    class_names = (
+        pd.read_csv(
+            class_map_path
+        )["display_name"]
+        .astype(str)
+        .tolist()
+    )
+
+    return (
+        model,
+        class_names,
+    )
+
+
+def keyword_class_score(
+    class_names: list[str],
+    class_scores: np.ndarray,
+    keywords: tuple[str, ...],
+) -> float:
+    """
+    Ambil skor maksimum dari kelas-kelas YAMNet yang
+    nama kelasnya mengandung salah satu keyword.
+    """
+    indices = []
+
+    for index, class_name in enumerate(
+        class_names
+    ):
+        lowered = (
+            class_name
+            .lower()
+        )
+
+        if any(
+            keyword in lowered
+            for keyword in keywords
+        ):
+            indices.append(
+                index
+            )
+
+    if not indices:
+        return 0.0
+
+    return float(
+        np.max(
+            class_scores[
+                indices
+            ]
+        )
+    )
+
+
+def validate_ghunnah_audio_type(
+    waveform: np.ndarray,
+) -> dict:
+    """
+    Menolak input yang jelas merupakan:
+    - suara hewan,
+    - musik/instrumen tanpa indikasi suara manusia,
+    - suara non-manusia dominan.
+
+    Penting:
+    singing/chant/mantra/humming tetap dianggap sebagai indikasi
+    suara manusia supaya bacaan bernada tidak mudah ditolak.
+    """
+    waveform = np.asarray(
+        waveform,
+        dtype=np.float32,
+    )
+
+    if waveform.size == 0:
+        raise SilentAudioError(
+            "Suara tidak terdengar."
+        )
+
+    max_samples = int(
+        SAMPLE_RATE
+        * YAMNET_CHECK_SECONDS
+    )
+
+    waveform_for_yamnet = (
+        waveform[
+            :max_samples
+        ]
+    )
+
+    yamnet_model, class_names = (
+        load_yamnet()
+    )
+
+    scores, _, _ = yamnet_model(
+        tf.convert_to_tensor(
+            waveform_for_yamnet,
+            dtype=tf.float32,
+        )
+    )
+
+    scores = np.asarray(
+        scores.numpy(),
+        dtype=np.float32,
+    )
+
+    if scores.size == 0:
+        # Jika YAMNet gagal memberi skor, jangan menggagalkan
+        # CNN hanya karena filter tambahan.
+        return {
+            "passed": True,
+            "top_label": "unknown",
+            "top_score": 0.0,
+            "human_voice_score": 0.0,
+            "animal_score": 0.0,
+            "music_score": 0.0,
+        }
+
+    # Rata-rata skor semua frame agar lebih stabil.
+    clip_scores = np.mean(
+        scores,
+        axis=0,
+    )
+
+    top_index = int(
+        np.argmax(
+            clip_scores
+        )
+    )
+
+    top_label = str(
+        class_names[
+            top_index
+        ]
+    )
+
+    top_score = float(
+        clip_scores[
+            top_index
+        ]
+    )
+
+    human_voice_score = (
+        keyword_class_score(
+            class_names,
+            clip_scores,
+            HUMAN_VOICE_KEYWORDS,
+        )
+    )
+
+    animal_score = (
+        keyword_class_score(
+            class_names,
+            clip_scores,
+            ANIMAL_KEYWORDS,
+        )
+    )
+
+    music_score = (
+        keyword_class_score(
+            class_names,
+            clip_scores,
+            MUSIC_KEYWORDS,
+        )
+    )
+
+    details = {
+        "passed": True,
+        "top_label": top_label,
+        "top_score": top_score,
+        "human_voice_score": human_voice_score,
+        "animal_score": animal_score,
+        "music_score": music_score,
+    }
+
+    # --------------------------------------------------------
+    # 1. SUARA HEWAN
+    # --------------------------------------------------------
+    # Tolak bila indikasi hewan cukup tinggi dan jelas lebih dominan
+    # dibanding indikasi suara manusia.
+    if (
+        animal_score
+        >= ANIMAL_REJECT_SCORE
+        and animal_score
+        >= (
+            human_voice_score
+            + NONVOICE_MARGIN
+        )
+    ):
+        details["passed"] = False
+
+        raise InvalidGhunnahAudioError(
+            "Audio terdeteksi sebagai suara hewan atau bukan bacaan manusia. "
+            "Silakan gunakan rekaman bacaan ghunnah.",
+            details,
+        )
+
+    # --------------------------------------------------------
+    # 2. MUSIK / INSTRUMEN
+    # --------------------------------------------------------
+    # Jangan menolak hanya karena ada kelas Music.
+    # Bacaan bernada kadang bisa ikut mendapat skor musik.
+    # Musik ditolak hanya ketika skor musik kuat DAN indikasi
+    # suara manusia rendah.
+    if (
+        music_score
+        >= MUSIC_REJECT_SCORE
+        and human_voice_score
+        < MIN_HUMAN_VOICE_SCORE
+        and music_score
+        >= (
+            human_voice_score
+            + NONVOICE_MARGIN
+        )
+    ):
+        details["passed"] = False
+
+        raise InvalidGhunnahAudioError(
+            "Audio terdeteksi sebagai musik atau suara non-bacaan. "
+            "Silakan gunakan rekaman bacaan ghunnah.",
+            details,
+        )
+
+    # --------------------------------------------------------
+    # 3. NON-HUMAN DOMINAN
+    # --------------------------------------------------------
+    # Jika YAMNet sangat yakin pada sesuatu, tetapi hampir tidak
+    # menemukan indikasi vokal manusia, input ditolak.
+    if (
+        human_voice_score
+        < MIN_HUMAN_VOICE_SCORE
+        and top_score >= 0.35
+    ):
+        details["passed"] = False
+
+        raise InvalidGhunnahAudioError(
+            "Tidak terdeteksi suara manusia yang cukup untuk dianalisis "
+            "sebagai bacaan ghunnah.",
+            details,
+        )
+
+    return details
+
+
+# ============================================================
 # AUDIO
 # ============================================================
 class SilentAudioError(Exception):
     pass
+
+
+class InvalidGhunnahAudioError(Exception):
+    """
+    Audio terdengar, tetapi bukan input yang sesuai untuk
+    klasifikasi bacaan ghunnah.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        details: dict | None = None,
+    ):
+        super().__init__(message)
+        self.details = details or {}
 
 
 def decode_audio(
@@ -935,6 +1301,17 @@ def predict_audio(
         waveform
     )
 
+    # --------------------------------------------------------
+    # FILTER JENIS AUDIO SEBELUM CNN
+    # --------------------------------------------------------
+    # Musik, hewan, dan input non-suara-manusia yang jelas
+    # dihentikan di sini sehingga tidak dipaksa menjadi BENAR/SALAH.
+    audio_type_info = (
+        validate_ghunnah_audio_type(
+            waveform
+        )
+    )
+
     x = audio_to_model_input(
         waveform
     )
@@ -993,6 +1370,7 @@ def predict_audio(
         "status": status,
         "probability_correct": probability_correct,
         "probability_wrong": probability_wrong,
+        "audio_type_info": audio_type_info,
     }
 
 
@@ -1061,6 +1439,27 @@ def run_analysis(
         st.warning(
             "Suara tidak terdengar."
         )
+        return
+
+    except InvalidGhunnahAudioError as error:
+        st.warning(
+            "Audio bukan input bacaan ghunnah."
+        )
+
+        st.info(
+            str(error)
+        )
+
+        # Detail disembunyikan agar UI utama tetap sederhana.
+        # Berguna saat pengujian/skripsi untuk melihat keputusan YAMNet.
+        if error.details:
+            with st.expander(
+                "Detail filter audio"
+            ):
+                st.json(
+                    error.details
+                )
+
         return
 
     except Exception as error:
