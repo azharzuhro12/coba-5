@@ -530,7 +530,7 @@ upload_tab, record_tab = st.tabs(
 with upload_tab:
     uploaded = st.file_uploader(
         "Pilih file audio",
-        type=["wav", "mp3", "m4a", "ogg", "flac"],
+        type=["wav", "mp3", "m4a", "ogg", "mp4""flac"],
     )
 
     if uploaded is not None:
