@@ -1,4 +1,4 @@
-streamlit==1.61.1
+streamlit==1.60.0
 tensorflow-cpu==2.21.0
 librosa==0.11.0
 soundfile==0.13.1
@@ -6,3 +6,6 @@ numpy>=1.26,<2.3
 pandas>=2.2,<3
 huggingface_hub>=0.34,<2
 pydub==0.25.1
+
+tensorflow-hub==0.16.1
+tf-keras==2.21.0
