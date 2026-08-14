@@ -20,9 +20,9 @@ from pydub import AudioSegment
 # ============================================================
 APP_DIR = Path(__file__).resolve().parent
 
-SR = 16000
+SR = 16_000
 N_MELS = 64
-N_FFT = 1024
+N_FFT = 1_024
 HOP_LENGTH = 256
 TOP_DB = 30
 MAX_FRAMES = 501
@@ -38,23 +38,12 @@ MIN_ACTIVE_SEC = 0.50
 MIN_ACTIVE_RATIO = 0.025
 
 QWEN_ID = "Qwen/Qwen2.5-1.5B-Instruct"
-QWEN_NAME = "Qwen2.5-1.5B"
 
-MODEL_FILES = [
-    APP_DIR / "best_cnn.h5",
-    APP_DIR / "best_cnn.keras",
-    APP_DIR / "best_cnn.weights.h5",
-]
+MODEL_FILES = [APP_DIR / "best_cnn.keras"]
 
-METADATA_FILES = [
-    APP_DIR / "metadata.csv",
-    APP_DIR / "feedback_kb.csv",
-]
+METADATA_FILES = [APP_DIR / "metadata.csv",]
 
-
-# ============================================================
 # UI DASAR
-# ============================================================
 st.set_page_config(
     page_title="Ghunnah",
     page_icon="🎙️",
@@ -73,7 +62,24 @@ st.markdown(
             border-radius: 22px;
             background: linear-gradient(135deg, #312e81, #6d28d9, #0284c7);
             color: white;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero h1 {
+            margin-bottom: 0.3rem;
+        }
+
+        .hero p {
+            margin: 0;
+            opacity: 0.95;
+        }
+
+        .result-card {
+            padding: 1rem 1.1rem;
+            border-radius: 16px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            margin: 0.5rem 0 1rem 0;
         }
 
         .feedback-card {
@@ -84,15 +90,17 @@ st.markdown(
             border-left: 5px solid #7c3aed;
             line-height: 1.6;
         }
+
+        .debug-text {
+            color: #64748b;
+            font-size: 0.86rem;
+        }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-
-# ============================================================
 # SECRET
-# ============================================================
 def get_secret(name: str, default: str = "") -> str:
     try:
         return str(st.secrets[name]).strip()
@@ -103,10 +111,7 @@ def get_secret(name: str, default: str = "") -> str:
 HF_TOKEN = get_secret("HF_TOKEN")
 HF_PROVIDER = get_secret("HF_PROVIDER", "auto") or "auto"
 
-
-# ============================================================
 # MODEL CNN
-# ============================================================
 def build_model() -> tf.keras.Model:
     inputs = tf.keras.Input(
         shape=INPUT_SHAPE,
@@ -138,8 +143,8 @@ def build_model() -> tf.keras.Model:
     )(x)
 
     return tf.keras.Model(
-        inputs,
-        outputs,
+        inputs=inputs,
+        outputs=outputs,
         name="GhunnahCNN",
     )
 
@@ -175,17 +180,12 @@ def load_model(path_text: str) -> tf.keras.Model:
     return model
 
 
-# ============================================================
 # AUDIO
-# ============================================================
 class SilentAudioError(Exception):
-    pass
+    """Dilempar ketika audio terlalu hening/tidak cukup aktif."""
 
 
-def decode_audio(
-    audio_bytes: bytes,
-    filename: str,
-) -> np.ndarray:
+def decode_audio(audio_bytes: bytes, filename: str) -> np.ndarray:
     suffix = Path(filename).suffix.lower() or ".audio"
 
     with tempfile.NamedTemporaryFile(
@@ -202,7 +202,6 @@ def decode_audio(
                 sr=SR,
                 mono=True,
             )
-
         except Exception:
             segment = (
                 AudioSegment.from_file(temp_path)
@@ -215,16 +214,10 @@ def decode_audio(
                 dtype=np.float32,
             )
 
-            scale = float(
-                1 << (8 * segment.sample_width - 1)
-            )
-
+            scale = float(1 << (8 * segment.sample_width - 1))
             waveform = samples / max(scale, 1.0)
 
-        return np.asarray(
-            waveform,
-            dtype=np.float32,
-        )
+        return np.asarray(waveform, dtype=np.float32)
 
     finally:
         temp_path.unlink(missing_ok=True)
@@ -239,15 +232,10 @@ def validate_audio(waveform: np.ndarray) -> None:
         raise SilentAudioError()
 
     peak = float(np.max(np.abs(waveform)))
-    rms = float(
-        np.sqrt(np.mean(waveform**2) + 1e-12)
-    )
+    rms = float(np.sqrt(np.mean(waveform**2) + 1e-12))
     rms_dbfs = 20 * np.log10(max(rms, 1e-12))
 
-    if (
-        peak < SILENCE_PEAK
-        or rms_dbfs < SILENCE_RMS_DBFS
-    ):
+    if peak < SILENCE_PEAK or rms_dbfs < SILENCE_RMS_DBFS:
         raise SilentAudioError()
 
     frame_rms = librosa.feature.rms(
@@ -330,14 +318,9 @@ def preprocess_audio(
             constant_values=float(logmel.min()),
         )
 
-    return logmel[..., np.newaxis].astype(
-        np.float32
-    )
+    return logmel[..., np.newaxis].astype(np.float32)
 
-
-# ============================================================
 # FEEDBACK
-# ============================================================
 @st.cache_data(show_spinner=False)
 def load_feedback() -> dict[int, list[str]]:
     path = next(
@@ -348,13 +331,10 @@ def load_feedback() -> dict[int, list[str]]:
     if path is None:
         return {
             0: ["Ghunnah sudah terdengar jelas."],
-            1: [
-                "Ghunnah perlu diperbaiki agar sesuai kaidah tajwid."
-            ],
+            1: ["Ghunnah perlu diperbaiki agar sesuai kaidah tajwid."],
         }
 
     df = pd.read_csv(path)
-
     required = {"label", "error_explanation"}
 
     if not required.issubset(df.columns):
@@ -363,7 +343,7 @@ def load_feedback() -> dict[int, list[str]]:
             "`label` dan `error_explanation`."
         )
 
-    feedback = {0: [], 1: []}
+    feedback: dict[int, list[str]] = {0: [], 1: []}
 
     for label in (0, 1):
         feedback[label] = (
@@ -447,10 +427,7 @@ def generate_feedback(
     except Exception:
         return base_feedback
 
-
-# ============================================================
 # INFERENCE
-# ============================================================
 def predict(
     model: tf.keras.Model,
     audio_bytes: bytes,
@@ -473,15 +450,9 @@ def predict(
     probability_wrong = float(
         np.clip(probability_wrong, 0.0, 1.0)
     )
-
     probability_correct = 1.0 - probability_wrong
 
-    label = (
-        0
-        if probability_correct >= MIN_BENAR
-        else 1
-    )
-
+    label = 0 if probability_correct >= MIN_BENAR else 1
     status = "BENAR" if label == 0 else "SALAH"
 
     return (
@@ -489,6 +460,44 @@ def predict(
         status,
         probability_correct,
         probability_wrong,
+    )
+
+
+def show_prediction(
+    status: str,
+    probability_correct: float,
+    probability_wrong: float,
+) -> None:
+    st.subheader("Hasil Prediksi")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("Prediksi", status)
+
+    with col2:
+        st.metric(
+            "Probability BENAR",
+            f"{probability_correct * 100:.2f}%",
+        )
+
+    with col3:
+        st.metric(
+            "Probability SALAH",
+            f"{probability_wrong * 100:.2f}%",
+        )
+
+    st.progress(probability_correct)
+
+    st.markdown(
+        (
+            '<div class="debug-text">'
+            f"Raw output model (SALAH): {probability_wrong:.6f} | "
+            f"Probability BENAR: {probability_correct:.6f} | "
+            f"Threshold BENAR: {MIN_BENAR:.2f}"
+            "</div>"
+        ),
+        unsafe_allow_html=True,
     )
 
 
@@ -510,37 +519,10 @@ def run_analysis(
             filename,
         )
 
-        # ====================================================
-        # TAMPILKAN PREDIKSI DAN PROBABILITY
-        # ====================================================
-        st.subheader("Hasil Prediksi")
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric(
-                "Prediksi",
-                status,
-            )
-
-        with col2:
-            st.metric(
-                "Probability BENAR",
-                f"{probability_correct * 100:.2f}%",
-            )
-
-        with col3:
-            st.metric(
-                "Probability SALAH",
-                f"{probability_wrong * 100:.2f}%",
-            )
-
-        st.progress(float(probability_correct))
-
-        st.caption(
-            f"Raw output model (SALAH): {probability_wrong:.6f} | "
-            f"Probability BENAR: {probability_correct:.6f} | "
-            f"Threshold BENAR: {MIN_BENAR:.2f}"
+        show_prediction(
+            status,
+            probability_correct,
+            probability_wrong,
         )
 
         options = feedbacks.get(label) or [
@@ -559,8 +541,7 @@ def run_analysis(
                 base_feedback,
             )
 
-        st.subheader("Umpan balik")
-
+        st.subheader("Umpan Balik")
         st.markdown(
             f"""
             <div class="feedback-card">
@@ -571,7 +552,7 @@ def run_analysis(
         )
 
     except SilentAudioError:
-        st.warning("Suara tidak terdengar.")
+        st.warning("Suara tidak terdengar atau terlalu pelan.")
 
     except Exception as error:
         st.error(
@@ -579,20 +560,23 @@ def run_analysis(
         )
 
 
-# ============================================================
-# APLIKASI
-# ============================================================
+# APP
 st.markdown(
     """
     <div class="hero">
         <h1>🎙️ Ghunnah</h1>
         <p>
-            Analisis bacaan ghunnah menggunakan CNN dan
-            umpan balik Qwen2.5-1.5B.
+            Analisis ketepatan bacaan ghunnah menggunakan CNN
+            dengan umpan balik berbantuan Qwen2.5-1.5B.
         </p>
     </div>
     """,
     unsafe_allow_html=True,
+)
+
+st.info(
+    "Masukkan rekaman bacaan Surah Maryam ayat 4, 5, 7, atau 8 "
+    "yang menjadi ruang lingkup sistem."
 )
 
 model_path = find_model_path()
@@ -609,27 +593,25 @@ except Exception as error:
     st.error(str(error))
     st.stop()
 
-
 upload_tab, record_tab = st.tabs(
-    ["📁 Upload audio", "🎤 Rekam suara"]
+    ["Upload Audio", " Rekam Suara"]
 )
-
 
 with upload_tab:
     uploaded = st.file_uploader(
         "Pilih file audio",
-        type=None,
+        type=["wav", "mp3", "m4a", "ogg", "flac"],
     )
 
-    if uploaded:
+    if uploaded is not None:
         audio_bytes = uploaded.getvalue()
-
         st.audio(audio_bytes)
 
         if st.button(
-            "Analisis file audio",
+            "Analisis File Audio",
             type="primary",
             use_container_width=True,
+            key="analyze_upload",
         ):
             run_analysis(
                 cnn_model,
@@ -638,21 +620,20 @@ with upload_tab:
                 uploaded.name,
             )
 
-
 with record_tab:
     recorded = st.audio_input(
         "Rekam bacaan ghunnah"
     )
 
-    if recorded:
+    if recorded is not None:
         audio_bytes = recorded.getvalue()
-
         st.audio(audio_bytes)
 
         if st.button(
-            "Analisis rekaman",
+            "Analisis Rekaman",
             type="primary",
             use_container_width=True,
+            key="analyze_recording",
         ):
             run_analysis(
                 cnn_model,
@@ -665,10 +646,8 @@ with record_tab:
                 ),
             )
 
-
 st.divider()
-
 st.caption(
-    "CNN menentukan hasil bacaan. "
-    "Qwen hanya menyusun ulang feedback dan tidak mengubah keputusan CNN."
+    "CNN menentukan hasil klasifikasi bacaan. "
+    "Qwen hanya menyusun ulang umpan balik dan tidak mengubah keputusan CNN."
 )
