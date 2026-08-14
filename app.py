@@ -455,7 +455,7 @@ def predict(
     model: tf.keras.Model,
     audio_bytes: bytes,
     filename: str,
-) -> tuple[int, str]:
+) -> tuple[int, str, float, float]:
     x = preprocess_audio(
         audio_bytes,
         filename,
@@ -484,7 +484,12 @@ def predict(
 
     status = "BENAR" if label == 0 else "SALAH"
 
-    return label, status
+    return (
+        label,
+        status,
+        probability_correct,
+        probability_wrong,
+    )
 
 
 def run_analysis(
@@ -494,10 +499,48 @@ def run_analysis(
     filename: str,
 ) -> None:
     try:
-        label, status = predict(
+        (
+            label,
+            status,
+            probability_correct,
+            probability_wrong,
+        ) = predict(
             model,
             audio_bytes,
             filename,
+        )
+
+        # ====================================================
+        # TAMPILKAN PREDIKSI DAN PROBABILITY
+        # ====================================================
+        st.subheader("Hasil Prediksi")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Prediksi",
+                status,
+            )
+
+        with col2:
+            st.metric(
+                "Probability BENAR",
+                f"{probability_correct * 100:.2f}%",
+            )
+
+        with col3:
+            st.metric(
+                "Probability SALAH",
+                f"{probability_wrong * 100:.2f}%",
+            )
+
+        st.progress(float(probability_correct))
+
+        st.caption(
+            f"Raw output model (SALAH): {probability_wrong:.6f} | "
+            f"Probability BENAR: {probability_correct:.6f} | "
+            f"Threshold BENAR: {MIN_BENAR:.2f}"
         )
 
         options = feedbacks.get(label) or [
