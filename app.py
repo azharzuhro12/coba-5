@@ -502,18 +502,13 @@ st.markdown(
     """
     <div class="hero">
         <h1>🎙️ Ghunnah</h1>
-        <p>
-            Analisis ketepatan bacaan ghunnah menggunakan CNN
-            dengan umpan balik berbantuan Qwen2.5-1.5B.
-        </p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 st.info(
-    "Masukkan rekaman bacaan Surah Maryam ayat 4, 5, 7, atau 8 "
-    "yang menjadi ruang lingkup sistem."
+    "Sialahkan Upload atau Masukkan rekaman bacaan Surah Maryam ayat 4, 5, 7, atau 8 "
 )
 
 model_path = find_model_path()
