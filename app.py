@@ -75,17 +75,24 @@ ANIMAL_REJECT_SCORE = 0.28
 MUSIC_REJECT_SCORE = 0.45
 NONVOICE_MARGIN = 0.15
 
-HUMAN_VOICE_KEYWORDS = (
+# Kategori manusia dibuat lebih presisi.
+# Jangan memakai kata "vocal" karena bisa mencocokkan "animal vocalization".
+SPEECH_KEYWORDS = (
     "speech",
     "speaking",
     "conversation",
     "narration",
     "whisper",
-    "singing",
+)
+
+RECITATION_KEYWORDS = (
     "chant",
     "mantra",
     "humming",
-    "vocal",
+)
+
+SINGING_KEYWORDS = (
+    "singing",
 )
 
 ANIMAL_KEYWORDS = (
@@ -473,14 +480,14 @@ def validate_ghunnah_audio_type(
     waveform: np.ndarray,
 ) -> dict:
     """
-    Menolak input yang jelas merupakan:
-    - suara hewan,
-    - musik/instrumen tanpa indikasi suara manusia,
-    - suara non-manusia dominan.
+    Filter OOD sebelum CNN.
 
-    Penting:
-    singing/chant/mantra/humming tetap dianggap sebagai indikasi
-    suara manusia supaya bacaan bernada tidak mudah ditolak.
+    Prinsip:
+    - speech/chant/mantra/humming -> indikasi bacaan manusia;
+    - animal -> ditolak bila dominan;
+    - music/instrument -> ditolak bila dominan;
+    - singing TIDAK otomatis dianggap bacaan, karena musik vokal
+      juga dapat menghasilkan skor singing tinggi.
     """
     waveform = np.asarray(
         waveform,
@@ -497,15 +504,11 @@ def validate_ghunnah_audio_type(
         * YAMNET_CHECK_SECONDS
     )
 
-    waveform_for_yamnet = (
-        waveform[
-            :max_samples
-        ]
-    )
+    waveform_for_yamnet = waveform[
+        :max_samples
+    ]
 
-    yamnet_model, class_names = (
-        load_yamnet()
-    )
+    yamnet_model, class_names = load_yamnet()
 
     scores, _, _ = yamnet_model(
         tf.convert_to_tensor(
@@ -520,26 +523,26 @@ def validate_ghunnah_audio_type(
     )
 
     if scores.size == 0:
-        # Jika YAMNet gagal memberi skor, jangan menggagalkan
-        # CNN hanya karena filter tambahan.
         return {
             "passed": True,
             "top_label": "unknown",
             "top_score": 0.0,
-            "human_voice_score": 0.0,
+            "speech_score": 0.0,
+            "recitation_score": 0.0,
+            "singing_score": 0.0,
             "animal_score": 0.0,
             "music_score": 0.0,
         }
 
-    # Untuk top label / non-voice gunakan rata-rata agar stabil.
+    # Rata-rata untuk kelas musik/hewan agar stabil.
     mean_scores = np.mean(
         scores,
         axis=0,
     )
 
-    # Untuk mendeteksi keberadaan suara manusia, gunakan persentil tinggi.
-    # Ini penting untuk bacaan yang hanya beberapa detik atau memiliki jeda.
-    voice_sensitive_scores = np.percentile(
+    # Persentil tinggi untuk mendeteksi keberadaan speech/chant
+    # meskipun hanya muncul pada sebagian frame.
+    presence_scores = np.percentile(
         scores,
         90,
         axis=0,
@@ -563,61 +566,63 @@ def validate_ghunnah_audio_type(
         ]
     )
 
-    human_voice_score = (
-        keyword_class_score(
-            class_names,
-            voice_sensitive_scores,
-            HUMAN_VOICE_KEYWORDS,
-        )
+    speech_score = keyword_class_score(
+        class_names,
+        presence_scores,
+        SPEECH_KEYWORDS,
     )
 
-    animal_score = (
-        keyword_class_score(
-            class_names,
-            mean_scores,
-            ANIMAL_KEYWORDS,
-        )
+    recitation_score = keyword_class_score(
+        class_names,
+        presence_scores,
+        RECITATION_KEYWORDS,
     )
 
-    music_score = (
-        keyword_class_score(
-            class_names,
-            mean_scores,
-            MUSIC_KEYWORDS,
-        )
+    singing_score = keyword_class_score(
+        class_names,
+        presence_scores,
+        SINGING_KEYWORDS,
+    )
+
+    animal_score = keyword_class_score(
+        class_names,
+        mean_scores,
+        ANIMAL_KEYWORDS,
+    )
+
+    music_score = keyword_class_score(
+        class_names,
+        mean_scores,
+        MUSIC_KEYWORDS,
+    )
+
+    # Indikasi bacaan yang kita percaya:
+    # speech atau chant/mantra/humming.
+    trusted_human_score = max(
+        speech_score,
+        recitation_score,
     )
 
     details = {
         "passed": True,
         "top_label": top_label,
         "top_score": top_score,
-        "human_voice_score": human_voice_score,
+        "speech_score": speech_score,
+        "recitation_score": recitation_score,
+        "singing_score": singing_score,
+        "trusted_human_score": trusted_human_score,
         "animal_score": animal_score,
         "music_score": music_score,
     }
 
     # --------------------------------------------------------
-    # PRIORITAS: SUARA MANUSIA / TILAWAH
+    # 1) HEWAN
     # --------------------------------------------------------
-    # Quran/tilawah kadang oleh YAMNet diberi label Singing,
-    # Chant, Mantra, Humming, bahkan Music. Jika indikasi vokal
-    # manusia cukup kuat, jangan ditolak hanya karena ada skor musik.
-    if human_voice_score >= 0.10:
-        return details
-
-    # --------------------------------------------------------
-    # 1. SUARA HEWAN
-    # --------------------------------------------------------
-    # Tolak bila indikasi hewan cukup tinggi dan jelas lebih dominan
-    # dibanding indikasi suara manusia.
+    # Lebih tegas dari versi sebelumnya.
     if (
-        animal_score
-        >= ANIMAL_REJECT_SCORE
+        animal_score >= 0.18
         and animal_score
-        >= (
-            human_voice_score
-            + NONVOICE_MARGIN
-        )
+        >= trusted_human_score + 0.05
     ):
         details["passed"] = False
 
@@ -627,23 +632,31 @@ def validate_ghunnah_audio_type(
             details,
         )
 
-    # --------------------------------------------------------
-    # 2. MUSIK / INSTRUMEN
-    # --------------------------------------------------------
-    # Jangan menolak hanya karena ada kelas Music.
-    # Bacaan bernada kadang bisa ikut mendapat skor musik.
-    # Musik ditolak hanya ketika skor musik kuat DAN indikasi
-    # suara manusia rendah.
-    if (
-        music_score
-        >= MUSIC_REJECT_SCORE
-        and human_voice_score
-        < 0.025
-        and music_score
-        >= (
-            human_voice_score
-            + NONVOICE_MARGIN
+    # Jika label teratas secara eksplisit berhubungan dengan hewan,
+    # tolak walaupun skornya tidak terlalu tinggi.
+    lowered_top = top_label.lower()
+
+    if any(
+        keyword in lowered_top
+        for keyword in ANIMAL_KEYWORDS
+    ) and trusted_human_score < 0.12:
+        details["passed"] = False
+
+        raise InvalidGhunnahAudioError(
+            "Audio terdeteksi sebagai suara hewan atau bukan bacaan manusia. "
+            "Silakan gunakan rekaman bacaan ghunnah.",
+            details,
         )
+
+    # --------------------------------------------------------
+    # 2) MUSIK
+    # --------------------------------------------------------
+    # Singing sendiri tidak cukup untuk meloloskan input.
+    # Musik dengan vokal tetap ditolak jika skor music dominan
+    # dan speech/chant/mantra tidak cukup kuat.
+    if (
+        music_score >= 0.20
+        and trusted_human_score < 0.15
     ):
         details["passed"] = False
 
@@ -653,21 +666,31 @@ def validate_ghunnah_audio_type(
             details,
         )
 
+    if any(
+        keyword in lowered_top
+        for keyword in MUSIC_KEYWORDS
+    ) and trusted_human_score < 0.15:
+        details["passed"] = False
+
+        raise InvalidGhunnahAudioError(
+            "Audio terdeteksi sebagai musik atau suara non-bacaan. "
+            "Silakan gunakan rekaman bacaan ghunnah.",
+            details,
+        )
+
     # --------------------------------------------------------
-    # 3. NON-HUMAN DOMINAN
+    # 3) HARUS ADA INDIKASI SUARA MANUSIA/BACAAN
     # --------------------------------------------------------
-    # Jika YAMNet sangat yakin pada sesuatu, tetapi hampir tidak
-    # menemukan indikasi vokal manusia, input ditolak.
+    # Singing murni tidak dijadikan bukti utama agar lagu tidak lolos.
     if (
-        human_voice_score
-        < 0.020
-        and top_score >= 0.55
+        trusted_human_score < 0.025
+        and top_score >= 0.20
     ):
         details["passed"] = False
 
         raise InvalidGhunnahAudioError(
-            "Tidak terdeteksi suara manusia yang cukup untuk dianalisis "
-            "sebagai bacaan ghunnah.",
+            "Tidak terdeteksi suara bacaan manusia yang cukup untuk "
+            "dianalisis sebagai ghunnah.",
             details,
         )
 
